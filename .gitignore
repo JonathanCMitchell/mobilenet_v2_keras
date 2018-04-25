@@ -1,0 +1,9 @@
+/models/
+*.npy
+/weights/
+*.jpeg
+*.pyc
+*.txt
+*.jpg
+__pycache__
+/__pycache__/

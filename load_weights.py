@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import numpy as np
 import pickle
 
@@ -248,18 +250,4 @@ print('len trainable: ', len(trainable_layers))
 print('model: ', model)
 print('set_weights: ', set_weights)
 
-import cv2
-panda = cv2.imread('panda.jpg')
-panda = cv2.cvtColor(panda, cv2.COLOR_BGR2RGB)
-panda = cv2.resize(panda, (224, 224), interpolation = cv2.INTER_LINEAR)
-# preprocess
-panda = panda / 127.5 - 1.0
-
-input_img = np.expand_dims(panda, axis = 0)
-
-output_logits = model.predict(input_img)
-
-
-model.save_weights('keras_mobilenet_1_224_weights.h5')
-model.save('keras_mobilenet_1_224_model.h5')
 
