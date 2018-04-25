@@ -87,82 +87,6 @@ from keras import backend as K
 
 BASE_WEIGHT_PATH = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.6/'
 
-
-class FrozenBatchNorm(BatchNormalization):
-    """Batch Normalization class. Subclasses the Keras BN class and
-    hardcodes training=False so the BN layer doesn't update
-    during training.
-
-    Batch normalization has a negative effect on training if batches are small
-    so we disable it here.
-    """
-
-    def build(self, input_shape):
-        dim = input_shape[self.axis]
-        if dim is None:
-            raise ValueError('Axis ' + str(self.axis) + ' of '
-                             'input tensor should have a defined dimension '
-                             'but the layer received an input with shape ' +
-                             str(input_shape) + '.')
-        self.input_spec = InputSpec(ndim=len(input_shape),
-                                    axes={self.axis: dim})
-        shape = (dim,)
-
-        if self.scale:
-            self.gamma = self.add_weight(shape=shape,
-                                         name='gamma',
-                                         initializer=self.gamma_initializer,
-                                         regularizer=self.gamma_regularizer,
-                                         constraint=self.gamma_constraint,
-                                         trainable=False)
-        else:
-            self.gamma = None
-        if self.center:
-            self.beta = self.add_weight(shape=shape,
-                                        name='beta',
-                                        initializer=self.beta_initializer,
-                                        regularizer=self.beta_regularizer,
-                                        constraint=self.beta_constraint,
-                                        trainable=False)
-        else:
-            self.beta = None
-        self.moving_mean = self.add_weight(
-            shape=shape,
-            name='moving_mean',
-            initializer=self.moving_mean_initializer,
-            trainable=False)
-        self.moving_variance = self.add_weight(
-            shape=shape,
-            name='moving_variance',
-            initializer=self.moving_variance_initializer,
-            trainable=False)
-        self.built = True
-
-    def call(self, inputs, training=None):
-        return super(self.__class__, self).call(inputs, training=False)
-
-
-
-# I included this for backwards compatibility with the exract_weights file
-# TODO Remove this 
-# class BatchNorm(BatchNormalization):
-#     """Extends the Keras BatchNormalization class to allow a central place
-#     to make changes if needed.
-#     Batch normalization has a negative effect on training if batches are small
-#     so this layer is often frozen (via setting in Config class) and functions
-#     as linear layer.
-#     """
-
-#     def call(self, inputs, training=None):
-#         """
-#         Note about training values:
-#             None: Train BN layers. This is the normal mode
-#             False: Freeze BN layers. Good when batch size is small
-#             True: (don't use). Set layer in training mode even when inferencing
-#         """
-#         return super(self.__class__, self).call(inputs, training=true)
-
-
 def relu6(x):
     return K.relu(x, max_value=6)
 
@@ -757,134 +681,10 @@ def _depthwise_conv_block(inputs, pointwise_conv_filters, alpha,
     x = BatchNorm(axis=channel_axis, name='bn%d_conv_pw_%d_bn' % (block_id, block_id))(x)
     return Activation(relu6, name='conv_pw_%d_relu' % block_id)(x)
 
-def _fpn_depthwise_conv_block(inputs, pointwise_conv_filters, alpha,
-                          depth_multiplier=1, strides=(1, 1), block_id=1):
-    """Adds a depthwise convolution block.
-
-    A depthwise convolution block consists of a depthwise conv,
-    batch normalization, relu6, pointwise convolution,
-    batch normalization and relu6 activation.
-
-    # Arguments
-        inputs: Input tensor of shape `(rows, cols, channels)`
-            (with `channels_last` data format) or
-            (channels, rows, cols) (with `channels_first` data format).
-        pointwise_conv_filters: Integer, the dimensionality of the output space
-            (i.e. the number of output filters in the pointwise convolution).
-        alpha: controls the width of the network.
-            - If `alpha` < 1.0, proportionally decreases the number
-                of filters in each layer.
-            - If `alpha` > 1.0, proportionally increases the number
-                of filters in each layer.
-            - If `alpha` = 1, default number of filters from the paper
-                 are used at each layer.
-        depth_multiplier: The number of depthwise convolution output channels
-            for each input channel.
-            The total number of depthwise convolution output
-            channels will be equal to `filters_in * depth_multiplier`.
-        strides: An integer or tuple/list of 2 integers,
-            specifying the strides of the convolution along the width and height.
-            Can be a single integer to specify the same value for
-            all spatial dimensions.
-            Specifying any stride value != 1 is incompatible with specifying
-            any `dilation_rate` value != 1.
-        block_id: Integer, a unique identification designating the block number.
-
-    # Input shape
-        4D tensor with shape:
-        `(batch, channels, rows, cols)` if data_format='channels_first'
-        or 4D tensor with shape:
-        `(batch, rows, cols, channels)` if data_format='channels_last'.
-
-    # Output shape
-        4D tensor with shape:
-        `(batch, filters, new_rows, new_cols)` if data_format='channels_first'
-        or 4D tensor with shape:
-        `(batch, new_rows, new_cols, filters)` if data_format='channels_last'.
-        `rows` and `cols` values might have changed due to stride.
-
-    # Returns
-        Output tensor of block.
-    """
-    channel_axis = 1 if K.image_data_format() == 'channels_first' else -1
-    pointwise_conv_filters = int(pointwise_conv_filters * alpha)
-
-    x = DepthwiseConv2D((3, 3),
-                        padding='same',
-                        depth_multiplier=depth_multiplier,
-                        strides=strides,
-                        use_bias=False,
-                        name='fpn_%d_conv_dw_%d' % (block_id, block_id))(inputs)
-    x = BatchNorm(axis=channel_axis, name='bn%d_conv_dw_%d_bn' % (block_id, block_id))(x)
-    x = Activation(relu6, name='conv_dw_%d_relu' % block_id)(x)
-
-    x = Conv2D(pointwise_conv_filters, (1, 1),
-               padding='same',
-               use_bias=False,
-               strides=(1, 1),
-               name='fpn_%d_conv_pw_%d' % (block_id, block_id))(x)
-    x = BatchNorm(axis=channel_axis, name='bn%d_conv_pw_%d_bn' % (block_id, block_id))(x)
-    return Activation(relu6, name='conv_pw_%d_relu' % block_id)(x)
-
-def _inverted_res_block(inputs, expansion, stride, filters, block_id):
-    in_channels = inputs._keras_shape[-1]
-    prefix = 'features.' + str(block_id) + '.conv.'
-    
-    # Expand
-    x = Conv2D(expansion * in_channels, kernel_size=1, padding='same', use_bias=False, activation=None,
-               name= 'mobl%d_conv_%d_expand' % (block_id, block_id))(inputs)
-    x = BatchNorm(epsilon=1e-5, name= 'bn%d_conv_%d_bn_expand' % (block_id, block_id))(x)
-    x = Activation(relu6, name = 'conv_%d_relu' %block_id)(x)
-
-    # Depthwise
-    x = DepthwiseConv2D(kernel_size=3, strides=stride, activation=None, use_bias=False, padding='same',
-                        name='mobl%d_conv_%d_depthwise' % (block_id, block_id))(x)
-    x = BatchNorm(epsilon=1e-5, name='bn%d_conv_%d_bn_depthwise' %(block_id, block_id))(x)
-    x = Activation(relu6, name='conv_dw_%d_relu' %block_id)(x)
-
-    # Project
-    x = Conv2D(filters, kernel_size=1, padding='same', use_bias=False, activation=None, name='mobl%d_conv_%d_project' % (block_id, block_id))(x)
-    x = BatchNorm(epsilon=1e-5, name='bn%d_conv_%d_bn_project' % (block_id, block_id))(x)
-
-    if in_channels == filters and stride == 1:
-        return Add(name='res_connect_' + str(block_id))([inputs, x])
-
-
-    return x
-
-
-def _first_inverted_res_block(inputs, expansion, stride, filters, block_id):
-    in_channels = inputs._keras_shape[-1]
-    prefix = 'features.' + str(block_id) + '.conv.'
-
-    # Depthwise
-    x = DepthwiseConv2D(kernel_size=3, strides=stride, activation=None, use_bias=False, padding='same',
-                        name='mobl%d_conv_%d_depthwise' % (block_id, block_id))(inputs)
-    x = BatchNorm(epsilon=1e-5, name='bn%d_conv_%d_bn_depthwise' %
-                  (block_id, block_id))(x)
-    x = Activation(relu6, name='conv_dw_%d_relu' % block_id)(x)
-
-    # Project
-    x = Conv2D(filters, kernel_size=1, padding='same', use_bias=False,
-               activation=None, name='mobl%d_conv_%d_project' % (block_id, block_id))(x)
-    x = BatchNorm(epsilon=1e-5, name='bn%d_conv_%d_bn_project' %
-                  (block_id, block_id))(x)
-
-    if in_channels == filters and stride == 1:
-        return Add(name='res_connect_' + str(block_id))([inputs, x])
-
-    return x
-
 def MobileNetV2(input_shape=(None, None, 3),
                 input_tensor=None,
                 include_top=True,
-                train_bn=False,
                 classes=1001): # includes background class
-
-    if train_bn == True:
-        BatchNorm = BatchNormalization
-    else:
-        BatchNorm = FrozenBatchNorm
     
     if input_tensor is None:
         inputs = Input(shape=input_shape)
@@ -892,7 +692,7 @@ def MobileNetV2(input_shape=(None, None, 3),
         inputs = get_source_inputs(input_tensor)[0]
 
     x = Conv2D(32, kernel_size=3, strides=(2, 2), padding='same', use_bias=False, name='Conv1')(inputs)
-    x = BatchNorm(epsilon=1e-5, name='bn_Conv1')(x)
+    x = BatchNormalization(epsilon=1e-5, name='bn_Conv1')(x)
     x = Activation(relu6, name='Conv1_relu')(x)
 
     # x = _inverted_res_block(x, filters=16, stride=1, expansion=1, block_id=0) # there are no expansion weights here
@@ -922,7 +722,7 @@ def MobileNetV2(input_shape=(None, None, 3),
     # TODO Can take C6 and overwrite function
 
     x = Conv2D(1280, kernel_size=1, use_bias=False, name='Conv_1')(x)
-    x = BatchNorm(epsilon=1e-5, name='Conv_1_bn')(x)
+    x = BatchNormalization(epsilon=1e-5, name='Conv_1_bn')(x)
     x = Activation(relu6)(x)
 
     if include_top:
@@ -932,35 +732,33 @@ def MobileNetV2(input_shape=(None, None, 3),
 
     return Model(inputs, x)
 
-
 def _inverted_res_block(inputs, expansion, stride, filters, block_id):
     in_channels = inputs._keras_shape[-1]
     prefix = 'features.' + str(block_id) + '.conv.'
     # Expand
     x = Conv2D(expansion * in_channels, kernel_size=1, padding='same', use_bias=False, activation=None,
                name='mobl%d_conv_%d_expand' % (block_id, block_id))(inputs)
-    x = BatchNorm(epsilon=1e-5, name='bn%d_conv_%d_bn_expand' %
+    x = BatchNormalization(epsilon=1e-5, name='bn%d_conv_%d_bn_expand' %
                   (block_id, block_id))(x)
     x = Activation(relu6, name='conv_%d_relu' % block_id)(x)
 
     # Depthwise
     x = DepthwiseConv2D(kernel_size=3, strides=stride, activation=None, use_bias=False, padding='same',
                         name='mobl%d_conv_%d_depthwise' % (block_id, block_id))(x)
-    x = BatchNorm(epsilon=1e-5, name='bn%d_conv_%d_bn_depthwise' %
+    x = BatchNormalization(epsilon=1e-5, name='bn%d_conv_%d_bn_depthwise' %
                   (block_id, block_id))(x)
     x = Activation(relu6, name='conv_dw_%d_relu' % block_id)(x)
 
     # Project
     x = Conv2D(filters, kernel_size=1, padding='same', use_bias=False,
                activation=None, name='mobl%d_conv_%d_project' % (block_id, block_id))(x)
-    x = BatchNorm(epsilon=1e-5, name='bn%d_conv_%d_bn_project' %
+    x = BatchNormalization(epsilon=1e-5, name='bn%d_conv_%d_bn_project' %
                   (block_id, block_id))(x)
 
     if in_channels == filters and stride == 1:
         return Add(name='res_connect_' + str(block_id))([inputs, x])
 
     return x
-
 
 def _first_inverted_res_block(inputs, expansion, stride, filters, block_id):
     in_channels = inputs._keras_shape[-1]
@@ -969,14 +767,14 @@ def _first_inverted_res_block(inputs, expansion, stride, filters, block_id):
     # Depthwise
     x = DepthwiseConv2D(kernel_size=3, strides=stride, activation=None, use_bias=False, padding='same',
                         name='mobl%d_conv_%d_depthwise' % (block_id, block_id))(inputs)
-    x = BatchNorm(epsilon=1e-5, name='bn%d_conv_%d_bn_depthwise' %
+    x = BatchNormalization(epsilon=1e-5, name='bn%d_conv_%d_bn_depthwise' %
                   (block_id, block_id))(x)
     x = Activation(relu6, name='conv_dw_%d_relu' % block_id)(x)
 
     # Project
     x = Conv2D(filters, kernel_size=1, padding='same', use_bias=False,
                activation=None, name='mobl%d_conv_%d_project' % (block_id, block_id))(x)
-    x = BatchNorm(epsilon=1e-5, name='bn%d_conv_%d_bn_project' %
+    x = BatchNormalization(epsilon=1e-5, name='bn%d_conv_%d_bn_project' %
                   (block_id, block_id))(x)
 
     if in_channels == filters and stride == 1:

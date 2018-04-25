@@ -3,7 +3,7 @@ from __future__ import print_function
 from keras.layers import Input
 from keras.utils import get_file
 import numpy as np
-from mobilenet import MobileNetV2
+from mobilenetv2 import MobileNetV2
 import urllib
 import json
 import PIL
@@ -16,6 +16,8 @@ import os
 import sys
 # PYTHONPATH should contain the research/slim/ directory in the tensorflow/models repo.
 from nets.mobilenet import mobilenet_v2
+
+from keras.models import Model
 
 ROOT_DIR = os.getcwd()
 MODEL_DIR = os.path.join(ROOT_DIR, 'models')
