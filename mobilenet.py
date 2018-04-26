@@ -543,6 +543,8 @@ def MobileNet(input_shape=None,
         else:
             img_input = input_tensor
 
+    
+
     x = _conv_block(img_input, 32, alpha, strides=(2, 2))
     x = _depthwise_conv_block(x, 64, alpha, depth_multiplier, block_id=1)
 

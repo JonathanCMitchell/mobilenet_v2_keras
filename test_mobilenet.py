@@ -3,7 +3,8 @@ from __future__ import print_function
 from keras.layers import Input
 from keras.utils import get_file
 import numpy as np
-from mobilenetv2 import MobileNetV2
+# from mobilenetv2 import MobileNetV2
+from MOBILENETV2 import MobileNetv2
 import urllib
 import json
 import PIL
@@ -32,9 +33,9 @@ def predict_keras(img):
     """
     input_tensor = Input(shape=(224, 224, 3))
 
-    model = MobileNetV2(input_tensor=input_tensor, include_top=True)
+    model = MobileNetv2(input_tensor=input_tensor, include_top=True, weights='imagenet')
     # TODO Build this into mobilenetV2
-    model.load_weights('keras_mobilenet_1_224_weights.h5')
+    # model.load_weights('keras_mobilenet_1_224_weights.h5')
 
     tic = time.time()
     output_logits = model.predict(img)

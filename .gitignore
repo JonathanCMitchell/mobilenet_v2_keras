@@ -7,3 +7,6 @@
 *.jpg
 __pycache__
 /__pycache__/
+*.h5
+.vscode
+/.vscode/

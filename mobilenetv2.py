@@ -84,8 +84,12 @@ from keras.applications.imagenet_utils import decode_predictions
 from keras import backend as K
 
 
+WEIGHTS_PATH = 'https://github.com/JonathanCMitchell/mobilenet_v2_keras/releases/download/v0.1/keras_mobilenet_1_224_weights.h5'
+WEIGHTS_PATH_NO_TOP = 'https://github.com/JonathanCMitchell/mobilenet_v2_keras/releases/download/v0.1/keras_mobilenet_1_224_weights_no_top.h5'
 
 BASE_WEIGHT_PATH = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.6/'
+# TODO edit path to be under deep-learning-models repo
+
 
 def relu6(x):
     return K.relu(x, max_value=6)
@@ -467,6 +471,8 @@ def MobileNet(input_shape=None,
         else:
             img_input = input_tensor
 
+    
+
     x = _conv_block(img_input, 32, alpha, strides=(2, 2))
     x = _depthwise_conv_block(x, 64, alpha, depth_multiplier, block_id=1)
 
@@ -682,6 +688,7 @@ def _depthwise_conv_block(inputs, pointwise_conv_filters, alpha,
     return Activation(relu6, name='conv_pw_%d_relu' % block_id)(x)
 
 def MobileNetV2(input_shape=(None, None, 3),
+                alpha = 1.0,
                 input_tensor=None,
                 include_top=True,
                 classes=1001): # includes background class
@@ -714,7 +721,6 @@ def MobileNetV2(input_shape=(None, None, 3),
     x = _inverted_res_block(x, filters=96, stride=1, expansion=6, block_id=12) #c4
 
     x = _inverted_res_block(x, filters=160, stride=2, expansion=6, block_id=13)
-    # TODO Stride BUG
     x = _inverted_res_block(x, filters=160, stride=1, expansion=6, block_id=14)
     x = _inverted_res_block(x, filters=160, stride=1, expansion=6, block_id=15) # c5
 
@@ -730,7 +736,13 @@ def MobileNetV2(input_shape=(None, None, 3),
         x = Flatten()(x)
         x = Dense(classes, activation='softmax', use_bias=True, name='Logits')(x)
 
-    return Model(inputs, x)
+    model = Model(inputs, x, name='mobilenetv2_%0.2f_%s' %
+                  (width_multiplier, rows))
+
+    # load weights
+    if weights = 'imagenet':
+
+
 
 def _inverted_res_block(inputs, expansion, stride, filters, block_id):
     in_channels = inputs._keras_shape[-1]
