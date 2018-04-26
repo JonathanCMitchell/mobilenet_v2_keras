@@ -266,7 +266,7 @@ def load_weights(models):
 # alpha = 1.3
 # rows = 224
 # models = [(1.4, 224), (1.3, 224), (1.0, 224), (0.5, 224)]
-load_weights(models=[(1.0, 128)])
+load_weights(models=models_to_load)
 
 
 
