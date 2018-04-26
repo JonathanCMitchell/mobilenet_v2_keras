@@ -31,7 +31,7 @@ def predict_keras(img, alpha, rows, weights_path):
             note: Image has been preprocessed (x /= 127.5 - 1)
     Runs forward pass on network and returns logits and the inference time
     """
-    input_tensor = Input(shape=(224, 224, 3))
+    input_tensor = Input(shape=(rows, rows, 3))
     
     # model = MobileNetv2(input_tensor=input_tensor, include_top=True, weights='imagenet')
 
@@ -79,48 +79,75 @@ def predict_slim(img, checkpoint, rows):
         toc = time.time()
     return x, toc-tic
 
+def test_keras_and_tf(models = []):
+    # This test runs through all the models included below and tests them
+    results = []
+    for alpha, rows in models:
+        # TODO replace WEIGHTS_SAVE_PATH_INCLUDE_TOP with repo link
+        WEIGHTS_SAVE_PATH_INCLUDE_TOP = '/home/jon/Documents/keras_mobilenetV2/t1_mobilenet_v2_weights_tf_dim_ordering_tf_kernels_' + \
+            str(alpha) + '_' + str(rows) + '.h5'
+
+        # Get tensorflow checkpoint path and download required items
+        SLIM_CKPT_base_path = get_tf_mobilenet_v2_items(alpha=alpha, rows=rows)
+
+        # To test Panda image
+        url = 'https://upload.wikimedia.org/wikipedia/commons/f/fe/Giant_Panda_in_Beijing_Zoo_1.JPG'
+        img_filename = 'panda.jpg'
+
+        # To test Monkey image
+        # url = 'https://upload.wikimedia.org/wikipedia/commons/a/a9/Macaca_sinica_-_01.jpg'
+        # img_filename = 'monkey.jpg'
+
+        # Grab test image
+        urllib.request.urlretrieve(url, img_filename)
+
+        # Preprocess
+        img = np.array(PIL.Image.open(img_filename).resize(
+            (rows, rows))).astype(np.float) / 128 - 1
+        img = np.expand_dims(img, axis=0)
+
+        # Keras model test
+        output_logits_keras, tk = predict_keras(
+            img, alpha=alpha, rows=rows, weights_path=WEIGHTS_SAVE_PATH_INCLUDE_TOP)
+
+        # Tensorflow SLIM
+        output_logits_tf, tt = predict_slim(img, SLIM_CKPT_base_path, rows)
+
+        label_map = create_readable_names_for_imagenet_labels()
+        print('for Model: alpha: ', alpha, "rows: ", rows)
+        print("Prediction keras: ", output_logits_keras.argmax(
+        ), label_map[output_logits_keras.argmax()], "score: ", output_logits_keras.max())
+        print("Prediction tf: ", output_logits_tf.argmax(),
+            label_map[output_logits_tf.argmax()], "score: ", output_logits_tf.max())
+        print("Inference time keras: ", tk)
+        print("Inference time tf: ", tt)
+        print('Output logits deviation: ', np.allclose(
+            output_logits_keras, output_logits_tf, 0.5))
+        assert(output_logits_tf.argmax() == output_logits_keras.argmax())
+        results.append({
+            "model": WEIGHTS_SAVE_PATH_INCLUDE_TOP,
+            "alpha": alpha,
+            "rows": rows,
+            "pred_keras_score": output_logits_keras.argmax(),
+            "pred_keras_label": label_map[output_logits_keras.argmax()],
+            "inference_time_keras": tk,
+            "pred_tf_score": output_logits_tf.argmax(),
+            "pred_tf_label": label_map[output_logits_tf.argmax()],
+            "inference_time_tf": tt,
+            "preds_agree": output_logits_keras.argmax() == output_logits_tf.argmax()
+        })
+    return results
+        
+
+
 
 if __name__ == "__main__":
 
     if not os.path.isdir(MODEL_DIR):
         os.makedirs(MODEL_DIR)
 
+    models = [(1.4, 224), (1.3, 224), (1.0, 224)]
+    test_results = test_keras_and_tf([(1.4, 224)])
 
-    alpha = 0.5
-    rows = 224
-
-    WEIGHTS_SAVE_PATH_INCLUDE_TOP = '/home/jon/Documents/keras_mobilenetV2/test_mobilenet_v2_weights_tf_dim_ordering_tf_kernels_' + \
-        str(alpha) + '_' + str(rows) + '.h5'
-
-   
-    # Get tensorflow checkpoint path and download required items
-    SLIM_CKPT_base_path = get_tf_mobilenet_v2_items(alpha = alpha, rows = rows)
-
-    # To test Panda image
-    url = 'https://upload.wikimedia.org/wikipedia/commons/f/fe/Giant_Panda_in_Beijing_Zoo_1.JPG'
-    img_filename = 'panda.jpg'
-
-    # To test Monkey image
-    # url = 'https://upload.wikimedia.org/wikipedia/commons/a/a9/Macaca_sinica_-_01.jpg'
-    # img_filename = 'monkey.jpg'
-
-    # Grab test image
-    urllib.request.urlretrieve(url, img_filename)
-
-    # Preprocess
-    img = np.array(PIL.Image.open(img_filename).resize(
-        (rows, rows))).astype(np.float) / 128 - 1
-    img = np.expand_dims(img, axis=0)
-
-    # Keras model test
-    output_logits_keras, tk = predict_keras(img, alpha = alpha, rows = rows, weights_path = WEIGHTS_SAVE_PATH_INCLUDE_TOP)
-
-    # Tensorflow SLIM
-    output_logits_tf, tt = predict_slim(img, SLIM_CKPT_base_path, rows)
-
-    label_map = create_readable_names_for_imagenet_labels()
-    print("Prediction keras: ", output_logits_keras.argmax(),label_map[output_logits_keras.argmax()], "score: ", output_logits_keras.max())
-    print("Prediction tf: ", output_logits_tf.argmax(), label_map[output_logits_tf.argmax()], "score: " , output_logits_tf.max())
-    print("Inference time keras: ", tk)
-    print("Inference time tf: ", tt)
-    print('Output logits deviation: ', np.allclose(output_logits_keras, output_logits_tf, 0.5))
+    print('test_results: ', test_results)
+    
