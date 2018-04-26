@@ -25,26 +25,30 @@ MODEL_DIR = os.path.join(ROOT_DIR, 'models')
 
 # ==== Load MobilenetV2 Keras Version ====
 # ========================================
-def predict_keras(img):
+def predict_keras(img, alpha, rows, weights_path):
     """
     params: img: an input image with shape (1, 224, 224, 3)
             note: Image has been preprocessed (x /= 127.5 - 1)
     Runs forward pass on network and returns logits and the inference time
     """
-    input_tensor = Input(shape=(224, 224, 3))
+    input_tensor = Input(shape=(rows, rows, 3))
+    
+    # model = MobileNetv2(input_tensor=input_tensor, include_top=True, weights='imagenet')
 
-    model = MobileNetv2(input_tensor=input_tensor, include_top=True, weights='imagenet')
-    # TODO Build this into mobilenetV2
-    # model.load_weights('keras_mobilenet_1_224_weights.h5')
+    model = MobileNetv2(input_tensor=input_tensor,
+                        include_top=True, weights=None, alpha = alpha)
+    model.load_weights(weights_path)
+
+
 
     tic = time.time()
     output_logits = model.predict(img)
     toc = time.time()
     return output_logits, toc-tic
 
-def get_tf_mobilenet_v2_items():
-    model_path = os.path.join(MODEL_DIR, 'mobilenet_v2_1.0_224')
-    base_name = 'mobilenet_v2_1.0_224'
+def get_tf_mobilenet_v2_items(alpha, rows):
+    model_path = os.path.join(MODEL_DIR, 'mobilenet_v2_' + str(alpha) + '_' + str(rows))
+    base_name = 'mobilenet_v2_' + str(alpha) + '_' + str(rows)
     base_path = os.path.join(model_path, base_name)
 
     url = 'https://storage.googleapis.com/mobilenet_v2/checkpoints/' + base_name + '.tgz'
@@ -58,7 +62,7 @@ def get_tf_mobilenet_v2_items():
     return base_path
     
 
-def predict_slim(img, checkpoint):
+def predict_slim(img, checkpoint, rows):
     """
     params: img: a preprocessed image with shape (1, 224, 224, 3)
             checkpoint: the path to the frozen.pb checkpoint
@@ -71,7 +75,7 @@ def predict_slim(img, checkpoint):
 
     with tf.Session(graph=inp.graph):
         tic = time.time()
-        x = predictions.eval(feed_dict={inp: img.reshape(1, 224,224, 3)})
+        x = predictions.eval(feed_dict={inp: img.reshape(1, rows,rows, 3)})
         toc = time.time()
     return x, toc-tic
 
@@ -81,8 +85,16 @@ if __name__ == "__main__":
     if not os.path.isdir(MODEL_DIR):
         os.makedirs(MODEL_DIR)
 
+
+    alpha = 0.5
+    rows = 224
+
+    WEIGHTS_SAVE_PATH_INCLUDE_TOP = '/home/jon/Documents/keras_mobilenetV2/test_mobilenet_v2_weights_tf_dim_ordering_tf_kernels_' + \
+        str(alpha) + '_' + str(rows) + '.h5'
+
+   
     # Get tensorflow checkpoint path and download required items
-    SLIM_CKPT_base_path = get_tf_mobilenet_v2_items()
+    SLIM_CKPT_base_path = get_tf_mobilenet_v2_items(alpha = alpha, rows = rows)
 
     # To test Panda image
     url = 'https://upload.wikimedia.org/wikipedia/commons/f/fe/Giant_Panda_in_Beijing_Zoo_1.JPG'
@@ -97,14 +109,14 @@ if __name__ == "__main__":
 
     # Preprocess
     img = np.array(PIL.Image.open(img_filename).resize(
-        (224, 224))).astype(np.float) / 128 - 1
+        (rows, rows))).astype(np.float) / 128 - 1
     img = np.expand_dims(img, axis=0)
 
     # Keras model test
-    output_logits_keras, tk = predict_keras(img)
+    output_logits_keras, tk = predict_keras(img, alpha = alpha, rows = rows, weights_path = WEIGHTS_SAVE_PATH_INCLUDE_TOP)
 
     # Tensorflow SLIM
-    output_logits_tf, tt = predict_slim(img, SLIM_CKPT_base_path)
+    output_logits_tf, tt = predict_slim(img, SLIM_CKPT_base_path, rows)
 
     label_map = create_readable_names_for_imagenet_labels()
     print("Prediction keras: ", output_logits_keras.argmax(),label_map[output_logits_keras.argmax()], "score: ", output_logits_keras.max())

@@ -4,28 +4,25 @@ import numpy as np
 import pickle
 
 from keras.layers import Input, Conv2D, Dense
-from mobilenet import MobileNetV2, BatchNorm, DepthwiseConv2D
+from mobilenetv2 import MobileNetV2, BatchNorm, DepthwiseConv2D
 
-with open('layer_guide.p', 'rb') as pickle_file:
+alpha = 0.5
+rows = 224
+
+WEIGHTS_SAVE_PATH_INCLUDE_TOP = '/home/jon/Documents/keras_mobilenetV2/test_mobilenet_v2_weights_tf_dim_ordering_tf_kernels_' + str(alpha) + '_' + str(rows) + '.h5'
+WEIGHTS_SAVE_PATH_NO_TOP = '/home/jon/Documents/keras_mobilenetV2/test_mobilenet_v2_weights_tf_dim_ordering_tf_kernels_' + str(alpha) + '_' + str(rows) + '_no_top' + '.h5'
+
+
+with open('layer_guide'+str(alpha) + str(rows) +  '.p', 'rb') as pickle_file:
 	layer_guide = pickle.load(pickle_file)
-
 
 # layers 0-4 are first conv
 # layers 4 - 16 are expanded
-print('yoyo')
-
-# (Question) - what about conv1 batch norm moving_mean, moving_variance layers?
 
 # load mobilenet
-input_tensor = Input(shape = (224, 224, 3))
-model = MobileNetV2(input_tensor = input_tensor, include_top=True)
+input_tensor = Input(shape = (rows, rows, 3))
+model = MobileNetV2(input_tensor = input_tensor, include_top=True, alpha = alpha, weights = None)
 
-
-# First handle expanded
-# if isinstance hits
-
-# Handle non expanded
-# If isinstance fails
 
 not_expanded_layers = ['bn_Conv1',
                        'Conv_1_bn',
@@ -143,8 +140,6 @@ def find_bn_layers_match(keras_layer, block_id = None, mod = None, kind = None):
 	else:
 		return [], False
 
-	
-	
 # Calculate loaded number
 set_weights = 0
 for keras_layer in model.layers:
@@ -159,7 +154,7 @@ for keras_layer in model.layers:
 				keras_layer.set_weights(arrs)
 				set_weights += 1 # can add ()
 			else:
-				print('possible error not match found')
+				print('possible error not match found if isinstance BatchNorm and not expandable')
 
 		elif isinstance(keras_layer, DepthwiseConv2D):
 			lobj, isfound = find_not_exp_conv_layer_match(
@@ -211,7 +206,10 @@ for keras_layer in model.layers:
 				keras_layer.set_weights(arrs)
 				set_weights += 1
 			else:
-				print('possible error not match found')
+				print('possible error not match found on expandable batchNorm layers')
+				print('=== dump: ')
+				print('keras_layer: ', keras_layer.name)
+				
 	
 		# Check for DepthwiseConv2D
 		elif isinstance(keras_layer, DepthwiseConv2D):
@@ -224,7 +222,7 @@ for keras_layer in model.layers:
 					keras_layer.set_weights([arr])
 					set_weights += 1
 			else:
-				print('possible error not match found')
+				print('possible error not match found for DepthwiseConv2D in not expandable')
 			
 		# Check for Conv2D
 		elif isinstance(keras_layer, Conv2D):
@@ -241,6 +239,14 @@ for keras_layer in model.layers:
 
 # Organize batch norm layers into [gamma, beta, moving_mean, moving_std]
 # Organize expand conv block layers into [expand, depthwise, project]
+print('set_weights: ', set_weights)
+model.save_weights(WEIGHTS_SAVE_PATH_INCLUDE_TOP)
+
+# Save no top model
+out_relu = model.get_layer('out_relu').output
+from keras.models import Model
+model_no_top = Model(input = input_tensor, output = out_relu)
+model_no_top.save(WEIGHTS_SAVE_PATH_NO_TOP)
 
 
 trainable_layers = [l.weights for l in model.layers]
