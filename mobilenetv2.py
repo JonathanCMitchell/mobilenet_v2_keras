@@ -555,7 +555,13 @@ def MobileNetV2(input_shape=None,
     x = _inverted_res_block(x, filters=320, alpha=alpha, stride=1, expansion=6, block_id=16)
 
     # no alpha applied to last conv 
-    x = Conv2D(1280, kernel_size=1, use_bias=False, name='Conv_1')(x)
+    # as stated in the paper if the width multiplier is greater than 1 we increase the number of output channels
+    if alpha > 1.0:
+        last_block_filters = _make_divisible(1280 * alpha, 8)
+    else:
+        last_block_filters = 1280
+
+    x = Conv2D(last_block_filters, kernel_size=1, use_bias=False, name='Conv_1')(x)
     x = BatchNorm(epsilon=1e-5, name='Conv_1_bn')(x)
     x = Activation(relu6, name='out_relu')(x)
 
@@ -650,7 +656,6 @@ def _first_inverted_res_block(inputs, expansion, stride, alpha, filters, block_i
                            (block_id, block_id))(x)
     x = Activation(relu6, name='conv_dw_%d_relu' % block_id)(x)
 
-    print('pointwise conv filters for block id 0: ', pointwise_conv_filters)
     # Project
     x = Conv2D(pointwise_filters, kernel_size=1, padding='same', use_bias=False,
                activation=None, name='mobl%d_conv_%d_project' % (block_id, block_id))(x)

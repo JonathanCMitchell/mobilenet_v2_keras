@@ -4,7 +4,7 @@ from keras.layers import Input
 from keras.utils import get_file
 import numpy as np
 # from mobilenetv2 import MobileNetV2
-from MOBILENETV2 import MobileNetv2
+from mobilenetv2 import MobileNetV2
 import urllib
 import json
 import PIL
@@ -31,11 +31,11 @@ def predict_keras(img, alpha, rows, weights_path):
             note: Image has been preprocessed (x /= 127.5 - 1)
     Runs forward pass on network and returns logits and the inference time
     """
-    input_tensor = Input(shape=(rows, rows, 3))
+    input_tensor = Input(shape=(224, 224, 3))
     
     # model = MobileNetv2(input_tensor=input_tensor, include_top=True, weights='imagenet')
 
-    model = MobileNetv2(input_tensor=input_tensor,
+    model = MobileNetV2(input_tensor=input_tensor,
                         include_top=True, weights=None, alpha = alpha)
     model.load_weights(weights_path)
 
