@@ -6,8 +6,9 @@ import pickle
 from keras.layers import Input, Conv2D, Dense
 from mobilenetv2 import MobileNetV2, BatchNorm, DepthwiseConv2D
 
-alpha = 0.5
+alpha = 1.3
 rows = 224
+
 
 WEIGHTS_SAVE_PATH_INCLUDE_TOP = '/home/jon/Documents/keras_mobilenetV2/test_mobilenet_v2_weights_tf_dim_ordering_tf_kernels_' + str(alpha) + '_' + str(rows) + '.h5'
 WEIGHTS_SAVE_PATH_NO_TOP = '/home/jon/Documents/keras_mobilenetV2/test_mobilenet_v2_weights_tf_dim_ordering_tf_kernels_' + str(alpha) + '_' + str(rows) + '_no_top' + '.h5'
@@ -255,5 +256,9 @@ print('len trainable: ', len(trainable_layers))
 # TODO test predict with detect api
 print('model: ', model)
 print('set_weights: ', set_weights)
+assert(set_weights == 72)
+print('alpha: ', alpha)
+print('rows: ', rows)
+
 
 

@@ -73,9 +73,10 @@ def predict_slim(img, checkpoint, rows):
     inp, predictions = tf.import_graph_def(
     gd,  return_elements=['input:0', 'MobilenetV2/Predictions/Reshape_1:0'])
 
+    # maybe reshaping image twice img.reshape(1, rows,rows, 3)
     with tf.Session(graph=inp.graph):
         tic = time.time()
-        x = predictions.eval(feed_dict={inp: img.reshape(1, rows,rows, 3)})
+        x = predictions.eval(feed_dict={inp: img})
         toc = time.time()
     return x, toc-tic
 
@@ -84,7 +85,7 @@ def test_keras_and_tf(models = []):
     results = []
     for alpha, rows in models:
         # TODO replace WEIGHTS_SAVE_PATH_INCLUDE_TOP with repo link
-        WEIGHTS_SAVE_PATH_INCLUDE_TOP = '/home/jon/Documents/keras_mobilenetV2/t1_mobilenet_v2_weights_tf_dim_ordering_tf_kernels_' + \
+        WEIGHTS_SAVE_PATH_INCLUDE_TOP = '/home/jon/Documents/keras_mobilenetV2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_' + \
             str(alpha) + '_' + str(rows) + '.h5'
 
         # Get tensorflow checkpoint path and download required items
@@ -134,7 +135,9 @@ def test_keras_and_tf(models = []):
             "pred_tf_score": output_logits_tf.argmax(),
             "pred_tf_label": label_map[output_logits_tf.argmax()],
             "inference_time_tf": tt,
-            "preds_agree": output_logits_keras.argmax() == output_logits_tf.argmax()
+            "preds_agree": output_logits_keras.argmax() == output_logits_tf.argmax(),
+            "vector_difference": np.abs(output_logits_keras - output_logits_tf),
+            "max_vector_difference": np.abs(output_logits_keras - output_logits_tf).max(),
         })
     return results
         
@@ -147,7 +150,7 @@ if __name__ == "__main__":
         os.makedirs(MODEL_DIR)
 
     models = [(1.4, 224), (1.3, 224), (1.0, 224)]
-    test_results = test_keras_and_tf([(1.4, 224)])
+    test_results = test_keras_and_tf([(1.0, 128)])
 
     print('test_results: ', test_results)
     

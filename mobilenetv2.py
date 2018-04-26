@@ -567,7 +567,9 @@ def MobileNetV2(input_shape=None,
 
     if include_top:
         # TODO Add logic for if K.image_data_format() == 'channels_first' to work with non tf models
-        x = AveragePooling2D(pool_size=(7, 7))(x)
+        # set the pool_size equal to the shape of the convolution before we enter pooling
+        pool_size = tuple(x.get_shape().as_list()[1:3])
+        x = AveragePooling2D(pool_size=pool_size)(x)
         x = Flatten()(x)
         x = Dense(classes, activation='softmax',
                   use_bias=True, name='Logits')(x)
