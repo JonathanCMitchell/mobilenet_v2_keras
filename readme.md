@@ -2,6 +2,9 @@
 This folder contains building code for MobileNetV2, based on
 [MobileNetV2: Inverted Residuals and Linear Bottlenecks](https://arxiv.org/abs/1801.04381)
 
+
+This model file has been pushed to my keras fork which you can see [here](https://github.com/JonathanCMitchell/keras).
+You can also view the active pull request to keras [here]
 # Performance
 ## Latency
 This is the timing of [MobileNetV1](../mobilenet_v1.md) vs MobileNetV2 using
@@ -35,6 +38,7 @@ The `include_top` parameter can be used to grab the full network, if you set it 
 
 
 # Pretrained models
+Models can be found [here](https://github.com/JonathanCMitchell/mobilenet_v2_keras/releases)
 ## Imagenet  Checkpoints
 
 * These results are taken from [tfmobilenet](https://github.com/tensorflow/models/tree/master/research/slim/nets/mobilenet) but I estimate ours are similar in performance. Except for the Pixel 1 inference time.
@@ -64,6 +68,34 @@ The `include_top` parameter can be used to grab the full network, if you set it 
 | [mobilenet_v2_0.35_160](https://storage.googleapis.com/mobilenet_v2/checkpoints/mobilenet_v2_0.35_160.h5) | 30 | 1.66 | 55.7 | 79.1 |
 | [mobilenet_v2_0.35_128](https://storage.googleapis.com/mobilenet_v2/checkpoints/mobilenet_v2_0.35_128.h5) | 20 | 1.66 | 50.8 | 75.0 |
 | [mobilenet_v2_0.35_96](https://storage.googleapis.com/mobilenet_v2/checkpoints/mobilenet_v2_0.35_96.h5) | 11 | 1.66 | 45.5 | 70.4 |
+
+
+ Classification Checkpoint| MACs (M)   | Parameters (M)| Top 1 Accuracy| Top 5 Accuracy
+--------------------------|------------|---------------|---------|----|-------------
+| [mobilenet_v2_1.4_224]  | 582 | 6.06 | 75.0 | 92.5 | 
+| [mobilenet_v2_1.3_224]  | 509 | 5.34 | 74.4 | 92.1 | 
+| [mobilenet_v2_1.0_224]  | 300 | 3.47 | 71.8 | 91.0 | 
+| [mobilenet_v2_1.0_192]  | 221 | 3.47 | 70.7 | 90.1 | 
+| [mobilenet_v2_1.0_160]  | 154 | 3.47 | 68.8 | 89.0 | 
+| [mobilenet_v2_1.0_128]  | 99  | 3.47 | 65.3 | 86.9 | 
+| [mobilenet_v2_1.0_96]   | 56  | 3.47 | 60.3 | 83.2 | 
+| [mobilenet_v2_0.75_224] | 209 | 2.61 | 69.8 | 89.6 | 
+| [mobilenet_v2_0.75_192] | 153 | 2.61 | 68.7 | 88.9 |
+| [mobilenet_v2_0.75_160] | 107 | 2.61 | 66.4 | 87.3 |
+| [mobilenet_v2_0.75_128] | 69  | 2.61 | 63.2 | 85.3 |
+| [mobilenet_v2_0.75_96]  | 39  | 2.61 | 58.8 | 81.6 |
+| [mobilenet_v2_0.5_224]  | 97  | 1.95 | 65.4 | 86.4 |
+| [mobilenet_v2_0.5_192]  | 71  | 1.95 | 63.9 | 85.4 |
+| [mobilenet_v2_0.5_160]  | 50  | 1.95 | 61.0 | 83.2 |
+| [mobilenet_v2_0.5_128]  | 32  | 1.95 | 57.7 | 80.8 |
+| [mobilenet_v2_0.5_96]   | 18  | 1.95 | 51.2 | 75.8 |
+| [mobilenet_v2_0.35_224) | 59  | 1.66 | 60.3 | 82.9 |
+| [mobilenet_v2_0.35_192] | 43  | 1.66 | 58.2 | 81.2 |
+| [mobilenet_v2_0.35_160] | 30  | 1.66 | 55.7 | 79.1 |
+| [mobilenet_v2_0.35_128] | 20  | 1.66 | 50.8 | 75.0 |
+| [mobilenet_v2_0.35_96]  | 11  | 1.66 | 45.5 | 70.4 |
+
+
 
 ## Inference results.
 You can grab and load up the pickle file `test_results.p` or you can read the results below:

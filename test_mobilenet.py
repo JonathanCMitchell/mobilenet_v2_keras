@@ -37,8 +37,8 @@ def predict_keras(img, alpha, rows, weights_path):
     # model = MobileNetv2(input_tensor=input_tensor, include_top=True, weights='imagenet')
 
     model = MobileNetV2(input_tensor=input_tensor,
-                        include_top=True, weights=None, alpha = alpha)
-    model.load_weights(weights_path)
+                        include_top=True, weights='imagenet', alpha = alpha)
+
 
 
 
@@ -152,7 +152,7 @@ if __name__ == "__main__":
 
     test_results = test_keras_and_tf(models=models_to_load)
 
-    with open('test_results.p', 'wb') as pickle_file:
+    with open('test_results_2.p', 'wb') as pickle_file:
         pickle.dump(test_results, pickle_file)
 
 
