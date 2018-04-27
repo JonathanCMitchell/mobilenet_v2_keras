@@ -18,6 +18,7 @@ import sys
 from nets.mobilenet import mobilenet_v2
 from models_to_load import models_to_load
 from keras.models import Model
+import pickle
 
 ROOT_DIR = os.getcwd()
 MODEL_DIR = os.path.join(ROOT_DIR, 'models')
