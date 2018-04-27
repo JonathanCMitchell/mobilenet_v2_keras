@@ -485,12 +485,12 @@ def MobileNetV2(input_shape=None,
             raise ValueError('If imagenet weights are being loaded, '
                              'depth multiplier must be 1')
 
-        if alpha not in [0.25, 0.50, 0.75, 1.0]:
+        if alpha not in [0.35, 0.50, 0.75, 1.0]:
             raise ValueError('If imagenet weights are being loaded, '
                              'alpha can be one of'
                              '`0.25`, `0.50`, `0.75` or `1.0` only.')
 
-        if rows != cols or rows not in [128, 160, 192, 224]:
+        if rows != cols or rows not in [96, 128, 160, 192, 224]:
             if rows is None:
                 rows = 224
                 warnings.warn('MobileNet shape is undefined.'
@@ -498,7 +498,7 @@ def MobileNetV2(input_shape=None,
             else:
                 raise ValueError('If imagenet weights are being loaded, '
                                  'input must have a static square shape (one of '
-                                 '(128, 128), (160, 160), (192, 192), or (224, 224)).'
+                                 '(96, 96), (128, 128), (160, 160), (192, 192), or (224, 224)).'
                                  ' Input shape provided = %s' % (input_shape,))
 
     if K.image_data_format() != 'channels_last':

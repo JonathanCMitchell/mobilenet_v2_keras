@@ -3,7 +3,6 @@ from __future__ import print_function
 from keras.layers import Input
 from keras.utils import get_file
 import numpy as np
-# from mobilenetv2 import MobileNetV2
 from mobilenetv2 import MobileNetV2
 import urllib
 import json
@@ -17,7 +16,7 @@ import os
 import sys
 # PYTHONPATH should contain the research/slim/ directory in the tensorflow/models repo.
 from nets.mobilenet import mobilenet_v2
-
+from models_to_load import models_to_load
 from keras.models import Model
 
 ROOT_DIR = os.getcwd()
@@ -33,6 +32,7 @@ def predict_keras(img, alpha, rows, weights_path):
     """
     input_tensor = Input(shape=(rows, rows, 3))
     
+    # TODO Insert this line once we re-insert formerly deleted model files
     # model = MobileNetv2(input_tensor=input_tensor, include_top=True, weights='imagenet')
 
     model = MobileNetV2(input_tensor=input_tensor,
@@ -149,8 +149,11 @@ if __name__ == "__main__":
     if not os.path.isdir(MODEL_DIR):
         os.makedirs(MODEL_DIR)
 
-    models = [(1.4, 224), (1.3, 224), (1.0, 224)]
-    test_results = test_keras_and_tf([(1.0, 128)])
+    test_results = test_keras_and_tf(models=models_to_load)
+
+    with open('test_results.p', 'wb') as pickle_file:
+        pickle.dump(test_results, pickle_file)
+
 
     print('test_results: ', test_results)
     
