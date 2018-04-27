@@ -3,7 +3,8 @@ from __future__ import print_function
 from keras.layers import Input
 from keras.utils import get_file
 import numpy as np
-from mobilenetv2 import MobileNetV2
+# from mobilenetv2 import MobileNetV2
+from keras.applications import MobileNetV2
 import urllib
 import json
 import PIL
