@@ -3,8 +3,8 @@ from __future__ import print_function
 from keras.layers import Input
 from keras.utils import get_file
 import numpy as np
-# from mobilenetv2 import MobileNetV2
-from keras.applications import MobileNetV2
+from mobilenetv2 import MobileNetV2
+# from keras.applications import MobileNetV2
 import urllib
 import json
 import PIL
@@ -20,6 +20,9 @@ from nets.mobilenet import mobilenet_v2
 from models_to_load import models_to_load
 from keras.models import Model
 import pickle
+
+# TODO: Make sure the TF model doesn't have preprocessing in the graph, before the first conv.
+
 
 ROOT_DIR = os.getcwd()
 MODEL_DIR = os.path.join(ROOT_DIR, 'models')
@@ -38,15 +41,23 @@ def predict_keras(img, alpha, rows, weights_path):
     # model = MobileNetv2(input_tensor=input_tensor, include_top=True, weights='imagenet')
 
     model = MobileNetV2(input_tensor=input_tensor,
-                        include_top=True, weights='imagenet', alpha = alpha)
+                        include_top=True,
+                        weights='imagenet',
+                        alpha = alpha)
+
+    # Test local
+    model.load_weights(weights_path)
+                        
 
 
 
 
     tic = time.time()
-    output_logits = model.predict(img)
+    y_pred = model.predict(img.astype(np.float32))
+    y_pred = y_pred.ravel()
+
     toc = time.time()
-    return output_logits, toc-tic
+    return y_pred, toc-tic
 
 def get_tf_mobilenet_v2_items(alpha, rows):
     model_path = os.path.join(MODEL_DIR, 'mobilenet_v2_' + str(alpha) + '_' + str(rows))
@@ -78,14 +89,20 @@ def predict_slim(img, checkpoint, rows):
     # maybe reshaping image twice img.reshape(1, rows,rows, 3)
     with tf.Session(graph=inp.graph):
         tic = time.time()
-        x = predictions.eval(feed_dict={inp: img})
+        y_pred = predictions.eval(feed_dict={inp: img.astype(np.float32)})
+        y_pred = y_pred[0].ravel()
+
+        y_pred = y_pred[1:] / y_pred[1:].sum() # remove background class and renormalize
+
         toc = time.time()
-    return x, toc-tic
+    return y_pred, toc-tic
 
 def test_keras_and_tf(models = []):
     # This test runs through all the models included below and tests them
     results = []
     for alpha, rows in models:
+        print('alpha: ', alpha)
+        print('rows: ', rows)
         # TODO replace WEIGHTS_SAVE_PATH_INCLUDE_TOP with repo link
         WEIGHTS_SAVE_PATH_INCLUDE_TOP = '/home/jon/Documents/keras_mobilenetV2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_' + \
             str(alpha) + '_' + str(rows) + '.h5'
@@ -110,40 +127,37 @@ def test_keras_and_tf(models = []):
         img = np.expand_dims(img, axis=0)
 
         # Keras model test
-        output_logits_keras, tk = predict_keras(
-            img, alpha=alpha, rows=rows, weights_path=WEIGHTS_SAVE_PATH_INCLUDE_TOP)
+        output_logits_keras, tk = predict_keras(img, alpha=alpha, rows=rows, weights_path=WEIGHTS_SAVE_PATH_INCLUDE_TOP)
 
         # Tensorflow SLIM
         output_logits_tf, tt = predict_slim(img, SLIM_CKPT_base_path, rows)
 
         label_map = create_readable_names_for_imagenet_labels()
+        pred_keras = output_logits_keras.argmax() + 1 # shift over one cell for background
+        pred_tf = output_logits_tf.argmax() + 1
+
         print('for Model: alpha: ', alpha, "rows: ", rows)
-        print("Prediction keras: ", output_logits_keras.argmax(
-        ), label_map[output_logits_keras.argmax()], "score: ", output_logits_keras.max())
-        print("Prediction tf: ", output_logits_tf.argmax(),
-            label_map[output_logits_tf.argmax()], "score: ", output_logits_tf.max())
+        print("Prediction keras: ", pred_keras, label_map[pred_keras], "score: ", output_logits_keras.max())
+        print("Prediction tf: ", pred_tf,label_map[pred_tf], "score: ", output_logits_tf.max())
         print("Inference time keras: ", tk)
         print("Inference time tf: ", tt)
-        print('Output logits deviation: ', np.allclose(
-            output_logits_keras, output_logits_tf, 0.5))
-        assert(output_logits_tf.argmax() == output_logits_keras.argmax())
+        print('Do output logits deviate > 0.5 thresh? : ', np.allclose(output_logits_keras, output_logits_tf, 0.5))
+        assert(pred_tf == pred_keras)
         results.append({
             "model": WEIGHTS_SAVE_PATH_INCLUDE_TOP,
             "alpha": alpha,
             "rows": rows,
-            "pred_keras_score": output_logits_keras.argmax(),
-            "pred_keras_label": label_map[output_logits_keras.argmax()],
+            "pred_keras_score": pred_keras,
+            "pred_keras_label": label_map[pred_keras],
             "inference_time_keras": tk,
-            "pred_tf_score": output_logits_tf.argmax(),
-            "pred_tf_label": label_map[output_logits_tf.argmax()],
+            "pred_tf_score": pred_tf,
+            "pred_tf_label": label_map[pred_tf],
             "inference_time_tf": tt,
-            "preds_agree": output_logits_keras.argmax() == output_logits_tf.argmax(),
+            "preds_agree": pred_keras == pred_tf,
             "vector_difference": np.abs(output_logits_keras - output_logits_tf),
             "max_vector_difference": np.abs(output_logits_keras - output_logits_tf).max(),
         })
     return results
-        
-
 
 
 if __name__ == "__main__":
@@ -151,9 +165,9 @@ if __name__ == "__main__":
     if not os.path.isdir(MODEL_DIR):
         os.makedirs(MODEL_DIR)
 
-    test_results = test_keras_and_tf(models=models_to_load)
+    test_results = test_keras_and_tf(models=[(1.0, 224)])
 
-    with open('test_results_2.p', 'wb') as pickle_file:
+    with open('test_results_1.0_224.p', 'wb') as pickle_file:
         pickle.dump(test_results, pickle_file)
 
 
