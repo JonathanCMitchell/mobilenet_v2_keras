@@ -368,13 +368,15 @@ def MobileNetV2(input_shape=None,
                        'relu6': mobilenet.relu6})
 
     # Arguments
-        input_shape: optional shape tuple, only to be specified
-            if `include_top` is False (otherwise the input shape
-            has to be `(224, 224, 3)` (with `channels_last` data format)
-            or (3, 224, 224) (with `channels_first` data format).
-            It should have exactly 3 inputs channels,
-            and width and height should be no smaller than 32.
-            E.g. `(200, 200, 3)` would be one valid value.
+        input_shape: optional shape tuple, to be specified if you would
+        like to use a model with an input img resolution that is not 
+        It should have exactly 3 inputs channels (224, 224, 3). 
+        You can also omit this option if you would like
+        to infer input_shape from an input_tensor. If you
+        choose to include both input_tensor and input_shape then
+        input_shape will take priority.
+        E.g. `(160, 160, 3)` would be one valid value.
+
         alpha: controls the width of the network. This is known as the 
         width multiplier in the MobileNetv2 paper.
             - If `alpha` < 1.0, proportionally decreases the number
@@ -420,9 +422,64 @@ def MobileNetV2(input_shape=None,
         raise ValueError('If using `weights` as ImageNet with `include_top` '
                          'as true, `classes` should be 1000')
 
+    # If both input_shape and input_tensor are used, they should match
+    if input_shape is not None and input_tensor is not None:
+        try:
+            is_input_t_tensor = K.is_keras_tensor(input_tensor)
+        except ValueError:
+            try:
+                is_input_t_tensor = K.is_keras_tensor(get_source_inputs(input_tensor))
+            except ValueError:
+                raise ValueError('input_tensor: ', input_tensor,
+                                 'is not type input_tensor')
+        if is_input_t_tensor:
+            if K.image_data_format == 'channels_first':
+                if input_tensor._keras_shape[1] != input_shape[1]:
+                    raise ValueError('input_shape: ', input_shape,
+                                    'and input_tensor: ', input_tensor, 
+                                    'do not meet the same shape requirements')
+            else:
+                if input_tensor._keras_shape[2] != input_shape[1]:
+                    raise ValueError('input_shape: ', input_shape,
+                                    'and input_tensor: ', input_tensor,
+                                    'do not meet the same shape requirements')
+        else:
+            raise ValueError('input_tensor specified: ', input_tensor,
+                             'is not a keras tensor')
+                                 
+
     # Determine proper input shape and default size.
-    if input_shape is None:
+
+    # If input_shape is None, infer shape from input_tensor
+    if input_shape is None and input_tensor is not None:
+
+        try:
+            K.is_keras_tensor(input_tensor)
+        except ValueError:
+            raise ValueError('input_tensor: ', input_tensor, 
+                             'is type: ', type(input_tensor), 
+                             'which is not a valid type')
+
+        if input_shape is None and not K.is_keras_tensor(input_tensor):
+            default_size = 224
+        elif input_shape is None and K.is_keras_tensor(input_tensor):
+            if K.image_data_format() == 'channels_first':
+                rows = input_tensor._keras_shape[2]
+                cols = input_tensor._keras_shape[3]
+            else:
+                rows = input_tensor._keras_shape[1]
+                cols = input_tensor._keras_shape[2]
+
+            if rows == cols and rows in [96, 128, 160, 192, 224]:
+                default_size = rows
+            else:
+                default_size = 224
+
+    # If input_shape is None and no input_tensor
+    elif input_shape is None:
         default_size = 224
+
+    # If input_shape is not None, assume default size
     else:
         if K.image_data_format() == 'channels_first':
             rows = input_shape[1]
