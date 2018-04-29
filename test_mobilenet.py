@@ -154,8 +154,7 @@ def test_keras_and_tf(models = []):
             "pred_tf_label": label_map[pred_tf],
             "inference_time_tf": tt,
             "preds_agree": pred_keras == pred_tf,
-            # "vector_difference": np.abs(output_logits_keras - output_logits_tf),
-            "max_vector_difference": np.abs(output_logits_keras - output_logits_tf).max(),
+            "max_vector_difference": np.abs(output_logits_keras - output_logits_tf).max()
         }
 
         results.append(result)

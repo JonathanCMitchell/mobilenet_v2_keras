@@ -12,3 +12,6 @@ __pycache__
 /.vscode/
 layer_*.p
 ol_layer_*.p
+
+*.p
+eval_test_results.py

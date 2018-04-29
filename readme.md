@@ -4,7 +4,9 @@ This folder contains building code for MobileNetV2, based on
 
 
 This model file has been pushed to my keras fork which you can see [here](https://github.com/JonathanCMitchell/keras).
-You can also view the active pull request to keras [here]
+You can also view the active pull request to keras [here](https://github.com/keras-team/keras/pull/10047)
+A lot of the techniques and strategies developed for weight extraction in this repository was taken from [here](https://github.com/kentsommer/keras-inception-resnetV2)
+
 # Performance
 ## Latency
 This is the timing of [MobileNetV1](../mobilenet_v1.md) vs MobileNetV2 using
@@ -44,12 +46,14 @@ Models can be found [here](https://github.com/JonathanCMitchell/mobilenet_v2_ker
 * These results are taken from [tfmobilenet](https://github.com/tensorflow/models/tree/master/research/slim/nets/mobilenet) but I estimate ours are similar in performance. Except for the Pixel 1 inference time.
 
 
-## Inference results.
-You can grab and load up the pickle file `test_results.p` or you can read the results below:
+## Inference results in (test_mobilenet.py)
+You can grab and load up the pickle file `test_results.p` or you can read the results below: Please note that there are subtle differences between the TF models and the Keras models in the testing procedure, these are due to
+the differences in how Keras performs softmax, and the normalization that occurs after we pop out the first tensorflow logit (that is the background class) and re-normalize. 
 
 
 For questions, comments, and concerns please reach me at jmitchell1991@gmail.com.
 
+## Test results (1001 class)
 ```
 test_results: [{
     'rows': 224,
@@ -427,3 +431,274 @@ test_results: [{
     'preds_agree': True
 }]
 ```
+
+## Test results: 1000 classes
+```
+[{
+    'rows': 224,
+    'pred_tf_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'pred_keras_score': 389,
+    'pred_tf_score': 389,
+    'preds_agree': True,
+    'alpha': 1.4,
+    'inference_time_keras': 0.2321312427520752,
+    'pred_keras_label': 'giant panda, panda, panda bear, coon bear, Ailuropodamelanoleuca',
+    'model': '/home/jon/Documents/keras_mobilenetV2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_1.4_224.h5',
+    'max_vector_difference': 0.042831063,
+    'inference_time_tf': 0.5365610122680664
+}, {
+    'rows': 224,
+    'pred_tf_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'pred_keras_score': 389,
+    'pred_tf_score': 389,
+    'preds_agree': True,
+    'alpha': 1.3,
+    'inference_time_keras': 0.309173583984375,
+    'pred_keras_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'model': '/home/jon/Documents/keras_mobilenetV2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_1.3_224.h5',
+    'max_vector_difference': 0.1633901,
+    'inference_time_tf': 0.6658704280853271
+}, {
+    'rows': 224,
+    'pred_tf_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'pred_keras_score': 389,
+    'pred_tf_score': 389,
+    'preds_agree': True,
+    'alpha': 1.0,
+    'inference_time_keras': 0.36829209327697754,
+    'pred_keras_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'model': '/home/jon/Documents/keras_mobilenetV2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_1.0_224.h5',
+    'max_vector_difference': 0.00815512,
+    'inference_time_tf': 0.8123471736907959
+}, {
+    'rows': 192,
+    'pred_tf_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'pred_keras_score': 389,
+    'pred_tf_score': 389,
+    'preds_agree': True,
+    'alpha': 1.0,
+    'inference_time_keras': 0.43697261810302734,
+    'pred_keras_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'model': '/home/jon/Documents/keras_mobilenetV2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_1.0_192.h5',
+    'max_vector_difference': 0.03405291,
+    'inference_time_tf': 1.0188896656036377
+}, {
+    'rows': 160,
+    'pred_tf_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'pred_keras_score': 389,
+    'pred_tf_score': 389,
+    'preds_agree': True,
+    'alpha': 1.0,
+    'inference_time_keras': 0.5213620662689209,
+    'pred_keras_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'model': '/home/jon/Documents/keras_mobilenetV2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_1.0_160.h5',
+    'max_vector_difference': 0.0024634155,
+    'inference_time_tf': 1.231605052947998
+}, {
+    'rows': 128,
+    'pred_tf_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'pred_keras_score': 389,
+    'pred_tf_score': 389,
+    'preds_agree': True,
+    'alpha': 1.0,
+    'inference_time_keras': 0.590782642364502,
+    'pred_keras_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'model': '/home/jon/Documents/keras_mobilenetV2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_1.0_128.h5',
+    'max_vector_difference': 0.02254337,
+    'inference_time_tf': 1.4477722644805908
+}, {
+    'rows': 96,
+    'pred_tf_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'pred_keras_score': 389,
+    'pred_tf_score': 389,
+    'preds_agree': True,
+    'alpha': 1.0,
+    'inference_time_keras': 0.6745755672454834,
+    'pred_keras_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'model': '/home/jon/Documents/keras_mobilenetV2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_1.0_96.h5',
+    'max_vector_difference': 0.009703398,
+    'inference_time_tf': 1.725059986114502
+}, {
+    'rows': 224,
+    'pred_tf_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'pred_keras_score': 389,
+    'pred_tf_score': 389,
+    'preds_agree': True,
+    'alpha': 0.75,
+    'inference_time_keras': 0.7602894306182861,
+    'pred_keras_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'model': '/home/jon/Documents/keras_mobilenetV2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_0.75_224.h5',
+    'max_vector_difference': 0.03044498,
+    'inference_time_tf': 1.8605682849884033
+}, {
+    'rows': 192,
+    'pred_tf_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'pred_keras_score': 389,
+    'pred_tf_score': 389,
+    'preds_agree': True,
+    'alpha': 0.75,
+    'inference_time_keras': 0.8398780822753906,
+    'pred_keras_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'model': '/home/jon/Documents/keras_mobilenetV2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_0.75_192.h5',
+    'max_vector_difference': 0.0047159195,
+    'inference_time_tf': 2.006946086883545
+}, {
+    'rows': 160,
+    'pred_tf_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'pred_keras_score': 389,
+    'pred_tf_score': 389,
+    'preds_agree': True,
+    'alpha': 0.75,
+    'inference_time_keras': 0.9440453052520752,
+    'pred_keras_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'model': '/home/jon/Documents/keras_mobilenetV2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_0.75_160.h5',
+    'max_vector_difference': 0.048369706,
+    'inference_time_tf': 2.309004545211792
+}, {
+    'rows': 128,
+    'pred_tf_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'pred_keras_score': 389,
+    'pred_tf_score': 389,
+    'preds_agree': True,
+    'alpha': 0.75,
+    'inference_time_keras': 1.0247721672058105,
+    'pred_keras_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'model': '/home/jon/Documents/keras_mobilenetV2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_0.75_128.h5',
+    'max_vector_difference': 0.10489011,
+    'inference_time_tf': 2.551898717880249
+}, {
+    'rows': 96,
+    'pred_tf_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'pred_keras_score': 389,
+    'pred_tf_score': 389,
+    'preds_agree': True,
+    'alpha': 0.75,
+    'inference_time_keras': 1.1196868419647217,
+    'pred_keras_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'model': '/home/jon/Documents/keras_mobilenetV2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_0.75_96.h5',
+    'max_vector_difference': 0.020857051,
+    'inference_time_tf': 2.7527146339416504
+}, {
+    'rows': 224,
+    'pred_tf_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'pred_keras_score': 389,
+    'pred_tf_score': 389,
+    'preds_agree': True,
+    'alpha': 0.5,
+    'inference_time_keras': 1.230698823928833,
+    'pred_keras_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'model': '/home/jon/Documents/keras_mobilenetV2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_0.5_224.h5',
+    'max_vector_difference': 0.031421363,
+    'inference_time_tf': 2.9628419876098633
+}, {
+    'rows': 192,
+    'pred_tf_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'pred_keras_score': 389,
+    'pred_tf_score': 389,
+    'preds_agree': True,
+    'alpha': 0.5,
+    'inference_time_keras': 1.331193447113037,
+    'pred_keras_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'model': '/home/jon/Documents/keras_mobilenetV2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_0.5_192.h5',
+    'max_vector_difference': 0.10464072,
+    'inference_time_tf': 3.2052600383758545
+}, {
+    'rows': 160,
+    'pred_tf_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'pred_keras_score': 389,
+    'pred_tf_score': 389,
+    'preds_agree': True,
+    'alpha': 0.5,
+    'inference_time_keras': 1.4506702423095703,
+    'pred_keras_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'model': '/home/jon/Documents/keras_mobilenetV2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_0.5_160.h5',
+    'max_vector_difference': 0.04293281,
+    'inference_time_tf': 3.4141736030578613
+}, {
+    'rows': 128,
+    'pred_tf_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'pred_keras_score': 389,
+    'pred_tf_score': 389,
+    'preds_agree': True,
+    'alpha': 0.5,
+    'inference_time_keras': 1.546645164489746,
+    'pred_keras_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'model': '/home/jon/Documents/keras_mobilenetV2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_0.5_128.h5',
+    'max_vector_difference': 0.012662649,
+    'inference_time_tf': 3.6236307621002197
+}, {
+    'rows': 96,
+    'pred_tf_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'pred_keras_score': 389,
+    'pred_tf_score': 389,
+    'preds_agree': True,
+    'alpha': 0.5,
+    'inference_time_keras': 1.6599667072296143,
+    'pred_keras_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'model': '/home/jon/Documents/keras_mobilenetV2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_0.5_96.h5',
+    'max_vector_difference': 0.11007625,
+    'inference_time_tf': 3.9398250579833984
+}, {
+    'rows': 224,
+    'pred_tf_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'pred_keras_score': 389,
+    'pred_tf_score': 389,
+    'preds_agree': True,
+    'alpha': 0.35,
+    'inference_time_keras': 1.7787129878997803,
+    'pred_keras_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'model': '/home/jon/Documents/keras_mobilenetV2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_0.35_224.h5',
+    'max_vector_difference': 0.018119395,
+    'inference_time_tf': 4.164514064788818
+}, {
+    'rows': 192,
+    'pred_tf_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'pred_keras_score': 389,
+    'pred_tf_score': 389,
+    'preds_agree': True,
+    'alpha': 0.35,
+    'inference_time_keras': 1.8967313766479492,
+    'pred_keras_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'model': '/home/jon/Documents/keras_mobilenetV2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_0.35_192.h5',
+    'max_vector_difference': 0.031832576,
+    'inference_time_tf': 4.384629249572754
+}, {
+    'rows': 160,
+    'pred_tf_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'pred_keras_score': 389,
+    'pred_tf_score': 389,
+    'preds_agree': True,
+    'alpha': 0.35,
+    'inference_time_keras': 2.034467935562134,
+    'pred_keras_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'model': '/home/jon/Documents/keras_mobilenetV2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_0.35_160.h5',
+    'max_vector_difference': 0.008257747,
+    'inference_time_tf': 4.6021528244018555
+}, {
+    'rows': 128,
+    'pred_tf_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'pred_keras_score': 389,
+    'pred_tf_score': 389,
+    'preds_agree': True,
+    'alpha': 0.35,
+    'inference_time_keras': 2.175736427307129,
+    'pred_keras_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'model': '/home/jon/Documents/keras_mobilenetV2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_0.35_128.h5',
+    'max_vector_difference': 0.012835741,
+    'inference_time_tf': 4.958279609680176
+}, {
+    'rows': 96,
+    'pred_tf_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'pred_keras_score': 389,
+    'pred_tf_score': 389,
+    'preds_agree': True,
+    'alpha': 0.35,
+    'inference_time_keras': 2.609691619873047,
+    'pred_keras_label': 'giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca',
+    'model': '/home/jon/Documents/keras_mobilenetV2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_0.35_96.h5',
+    'max_vector_difference': 0.019455373,
+    'inference_time_tf': 6.363346576690674
+}]
+```
+
+## Test results remote (1000) class
