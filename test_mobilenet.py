@@ -42,10 +42,10 @@ def predict_keras(img, alpha, rows, weights_path):
 
     model = MobileNetV2(input_tensor=input_tensor,
                         include_top=True,
-                        weights='imagenet',
+                        weights=None,
                         alpha = alpha)
 
-    # Test local
+    # Test local remove weight=None to test remote weights
     model.load_weights(weights_path)
                         
 
@@ -54,7 +54,7 @@ def predict_keras(img, alpha, rows, weights_path):
 
     tic = time.time()
     y_pred = model.predict(img.astype(np.float32))
-    y_pred = y_pred.ravel()
+    y_pred = y_pred[0].ravel()
 
     toc = time.time()
     return y_pred, toc-tic
@@ -123,7 +123,7 @@ def test_keras_and_tf(models = []):
 
         # Preprocess
         img = np.array(PIL.Image.open(img_filename).resize(
-            (rows, rows))).astype(np.float) / 128 - 1
+            (rows, rows))).astype(np.float32) / 127.5 - 1.
         img = np.expand_dims(img, axis=0)
 
         # Keras model test
@@ -143,7 +143,7 @@ def test_keras_and_tf(models = []):
         print("Inference time tf: ", tt)
         print('Do output logits deviate > 0.5 thresh? : ', np.allclose(output_logits_keras, output_logits_tf, 0.5))
         assert(pred_tf == pred_keras)
-        results.append({
+        result = {
             "model": WEIGHTS_SAVE_PATH_INCLUDE_TOP,
             "alpha": alpha,
             "rows": rows,
@@ -154,9 +154,18 @@ def test_keras_and_tf(models = []):
             "pred_tf_label": label_map[pred_tf],
             "inference_time_tf": tt,
             "preds_agree": pred_keras == pred_tf,
-            "vector_difference": np.abs(output_logits_keras - output_logits_tf),
+            # "vector_difference": np.abs(output_logits_keras - output_logits_tf),
             "max_vector_difference": np.abs(output_logits_keras - output_logits_tf).max(),
-        })
+        }
+
+        results.append(result)
+
+        with open('test_results_' + str(alpha) + '_' + str(rows) + '.p', 'wb') as pickle_file:
+            pickle.dump(result, pickle_file)
+
+        # with open('test_results_remote' + str(alpha) + '_' + str(rows) + '.p', 'wb') as pickle_file:
+            # pickle.dump(result, pickle_file)
+
     return results
 
 
@@ -165,10 +174,14 @@ if __name__ == "__main__":
     if not os.path.isdir(MODEL_DIR):
         os.makedirs(MODEL_DIR)
 
-    test_results = test_keras_and_tf(models=[(1.0, 224)])
+    test_results = test_keras_and_tf(models=models_to_load)
 
-    with open('test_results_1.0_224.p', 'wb') as pickle_file:
+    with open('test_results_c1000.p', 'wb') as pickle_file:
         pickle.dump(test_results, pickle_file)
+
+    # Load remote test 
+    # with open('test_results_c1000.p', 'wb') as pickle_file:
+    #     pickle.dump(test_results, pickle_file)
 
 
     print('test_results: ', test_results)
