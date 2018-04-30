@@ -3,8 +3,8 @@ from __future__ import print_function
 from keras.layers import Input
 from keras.utils import get_file
 import numpy as np
-from mobilenetv2 import MobileNetV2
-# from keras.applications import MobileNetV2
+# from mobilenetv2 import MobileNetV2
+from keras.applications import MobileNetV2
 import urllib
 import json
 import PIL
@@ -36,17 +36,24 @@ def predict_keras(img, alpha, rows, weights_path):
     Runs forward pass on network and returns logits and the inference time
     """
     input_tensor = Input(shape=(rows, rows, 3))
+
+    # input_tensor = []
     
     # TODO Insert this line once we re-insert formerly deleted model files
     # model = MobileNetv2(input_tensor=input_tensor, include_top=True, weights='imagenet')
 
-    model = MobileNetV2(input_tensor=input_tensor,
+    # Try with bad input_tensor
+
+    # input_tensor = []
+
+    model = MobileNetV2(  #input_shape=(rows, rows, 3),
+                        input_tensor=input_tensor,
                         include_top=True,
-                        weights=None,
-                        alpha = alpha)
+                        weights='imagenet',
+                        alpha=alpha)
 
     # Test local remove weight=None to test remote weights
-    model.load_weights(weights_path)
+    # model.load_weights(weights_path)
                         
 
 
@@ -139,9 +146,12 @@ def test_keras_and_tf(models = []):
         print('for Model: alpha: ', alpha, "rows: ", rows)
         print("Prediction keras: ", pred_keras, label_map[pred_keras], "score: ", output_logits_keras.max())
         print("Prediction tf: ", pred_tf,label_map[pred_tf], "score: ", output_logits_tf.max())
+        print("output logit keras: ", output_logits_keras.max())
+        print("output logit tf: ", output_logits_tf.max())
         print("Inference time keras: ", tk)
         print("Inference time tf: ", tt)
         print('Do output logits deviate > 0.5 thresh? : ', np.allclose(output_logits_keras, output_logits_tf, 0.5))
+        print("max_vector_difference", np.abs(output_logits_keras - output_logits_tf).max() )
         assert(pred_tf == pred_keras)
         result = {
             "model": WEIGHTS_SAVE_PATH_INCLUDE_TOP,
@@ -156,14 +166,7 @@ def test_keras_and_tf(models = []):
             "preds_agree": pred_keras == pred_tf,
             "max_vector_difference": np.abs(output_logits_keras - output_logits_tf).max()
         }
-
         results.append(result)
-
-        with open('test_results_' + str(alpha) + '_' + str(rows) + '.p', 'wb') as pickle_file:
-            pickle.dump(result, pickle_file)
-
-        # with open('test_results_remote' + str(alpha) + '_' + str(rows) + '.p', 'wb') as pickle_file:
-            # pickle.dump(result, pickle_file)
 
     return results
 
@@ -173,14 +176,14 @@ if __name__ == "__main__":
     if not os.path.isdir(MODEL_DIR):
         os.makedirs(MODEL_DIR)
 
-    test_results = test_keras_and_tf(models=models_to_load)
+    test_results = test_keras_and_tf(models=models_to_load[14:16])
 
-    with open('test_results_c1000.p', 'wb') as pickle_file:
-        pickle.dump(test_results, pickle_file)
-
-    # Load remote test 
     # with open('test_results_c1000.p', 'wb') as pickle_file:
     #     pickle.dump(test_results, pickle_file)
+
+    # Load remote test 
+    with open('test_results_c1000_remote_is.p', 'wb') as pickle_file:
+        pickle.dump(test_results, pickle_file)
 
 
     print('test_results: ', test_results)

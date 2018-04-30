@@ -319,6 +319,7 @@ BatchNormalization = BatchNorm
 
 # ==== Delete ==========
 
+
 def preprocess_input(x):
     """Preprocesses a numpy array encoding a batch of images.
 
@@ -340,14 +341,16 @@ def preprocess_input(x):
 
 # This function is taken from the original tf repo. It ensures that all layers have a channel number that is divisible by 8
 # It can be seen here  https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet/mobilenet.py
+
+
 def _make_divisible(v, divisor, min_value=None):
-  if min_value is None:
-    min_value = divisor
-  new_v = max(min_value, int(v + divisor / 2) // divisor * divisor)
-  # Make sure that round down does not go down by more than 10%.
-  if new_v < 0.9 * v:
-    new_v += divisor
-  return new_v
+    if min_value is None:
+        min_value = divisor
+    new_v = max(min_value, int(v + divisor / 2) // divisor * divisor)
+    # Make sure that round down does not go down by more than 10%.
+    if new_v < 0.9 * v:
+        new_v += divisor
+    return new_v
 
 
 def MobileNetV2(input_shape=None,
@@ -369,15 +372,16 @@ def MobileNetV2(input_shape=None,
 
     # Arguments
         input_shape: optional shape tuple, to be specified if you would
-        like to use a model with an input img resolution that is not 
-        It should have exactly 3 inputs channels (224, 224, 3). 
+        like to use a model with an input img resolution that is not
+        It should have exactly 3 inputs channels (224, 224, 3).
         You can also omit this option if you would like
         to infer input_shape from an input_tensor. If you
         choose to include both input_tensor and input_shape then
-        input_shape will take priority.
+        input_shape will be used if they match, if the shapes
+        do not match then we will throw an error.
         E.g. `(160, 160, 3)` would be one valid value.
 
-        alpha: controls the width of the network. This is known as the 
+        alpha: controls the width of the network. This is known as the
         width multiplier in the MobileNetv2 paper.
             - If `alpha` < 1.0, proportionally decreases the number
                 of filters in each layer.
@@ -428,7 +432,8 @@ def MobileNetV2(input_shape=None,
             is_input_t_tensor = K.is_keras_tensor(input_tensor)
         except ValueError:
             try:
-                is_input_t_tensor = K.is_keras_tensor(get_source_inputs(input_tensor))
+                is_input_t_tensor = K.is_keras_tensor(
+                    get_source_inputs(input_tensor))
             except ValueError:
                 raise ValueError('input_tensor: ', input_tensor,
                                  'is not type input_tensor')
@@ -436,20 +441,18 @@ def MobileNetV2(input_shape=None,
             if K.image_data_format == 'channels_first':
                 if input_tensor._keras_shape[1] != input_shape[1]:
                     raise ValueError('input_shape: ', input_shape,
-                                    'and input_tensor: ', input_tensor, 
-                                    'do not meet the same shape requirements')
+                                     'and input_tensor: ', input_tensor, 
+                                     'do not meet the same shape requirements')
             else:
                 if input_tensor._keras_shape[2] != input_shape[1]:
                     raise ValueError('input_shape: ', input_shape,
-                                    'and input_tensor: ', input_tensor,
-                                    'do not meet the same shape requirements')
+                                     'and input_tensor: ', input_tensor,
+                                     'do not meet the same shape requirements')
         else:
             raise ValueError('input_tensor specified: ', input_tensor,
                              'is not a keras tensor')
-                                 
 
     # Determine proper input shape and default size.
-
     # If input_shape is None, infer shape from input_tensor
     if input_shape is None and input_tensor is not None:
 

@@ -1,4 +1,5 @@
 /models/
+/old_models/
 *.npy
 /weights/
 *.jpeg
