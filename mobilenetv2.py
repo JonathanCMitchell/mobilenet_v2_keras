@@ -65,6 +65,7 @@ from __future__ import division
 import os
 import warnings
 import h5py
+import numpy as np
 
 from keras.models import Model
 from keras.layers import Input
