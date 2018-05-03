@@ -12,7 +12,7 @@ A lot of the techniques and strategies developed for weight extraction in this r
 This is the timing of [MobileNetV1](../mobilenet_v1.md) vs MobileNetV2 using
 TF-Lite on the large core of Pixel 1 phone.
 
-![mnet_v1_vs_v2_pixel1_latency.png](mnet_v1_vs_v2_pixel1_latency.png)
+* ![mnet_v1_vs_v2_pixel1_latency](https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet/mnet_v1_vs_v2_pixel1_latency.png)
 
 # This model checkpoint was downloaded from the following source:
 | [mobilenet_v2_1.0_224](https://storage.googleapis.com/mobilenet_v2/checkpoints/mobilenet_v2_1.0_224.tgz) | 300 | 3.47 | 71.8 | 91.0 | 73.8
