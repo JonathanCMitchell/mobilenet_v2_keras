@@ -3,8 +3,7 @@ from __future__ import print_function
 from keras.layers import Input
 from keras.utils import get_file
 import numpy as np
-# from mobilenetv2 import MobileNetV2
-from keras.applications import MobileNetV2
+from mobilenetv2 import MobileNetV2
 import urllib
 import json
 import PIL
@@ -21,15 +20,11 @@ from models_to_load import models_to_load
 from keras.models import Model
 import pickle
 
-# TODO: Make sure the TF model doesn't have preprocessing in the graph, before the first conv.
-
-
 ROOT_DIR = os.getcwd()
 MODEL_DIR = os.path.join(ROOT_DIR, 'models')
 
-# ==== Load MobilenetV2 Keras Version ====
-# ========================================
-def predict_keras(img, alpha, rows, weights_path):
+
+def predict_keras(img, alpha, rows):
     """
     params: img: an input image with shape (1, 224, 224, 3)
             note: Image has been preprocessed (x /= 127.5 - 1)
@@ -37,34 +32,18 @@ def predict_keras(img, alpha, rows, weights_path):
     """
     input_tensor = Input(shape=(rows, rows, 3))
 
-    # input_tensor = []
-    
-    # TODO Insert this line once we re-insert formerly deleted model files
-    # model = MobileNetv2(input_tensor=input_tensor, include_top=True, weights='imagenet')
-
-    # Try with bad input_tensor
-
-    # input_tensor = []
-
-    model = MobileNetV2(  #input_shape=(rows, rows, 3),
-                        input_tensor=input_tensor,
+    # Note: you could also provide an input_shape
+    model = MobileNetV2(input_tensor=input_tensor,
                         include_top=True,
                         weights='imagenet',
                         alpha=alpha)
 
-    # Test local remove weight=None to test remote weights
-    # model.load_weights(weights_path)
-                        
-
-
-
-
     tic = time.time()
     y_pred = model.predict(img.astype(np.float32))
     y_pred = y_pred[0].ravel()
-
     toc = time.time()
     return y_pred, toc-tic
+
 
 def get_tf_mobilenet_v2_items(alpha, rows):
     model_path = os.path.join(MODEL_DIR, 'mobilenet_v2_' + str(alpha) + '_' + str(rows))
@@ -73,14 +52,14 @@ def get_tf_mobilenet_v2_items(alpha, rows):
 
     url = 'https://storage.googleapis.com/mobilenet_v2/checkpoints/' + base_name + '.tgz'
     print('Downloading from ', url)
-    
+
     urllib.request.urlretrieve(url, model_path + '.tgz')
     tar = tarfile.open(model_path + '.tgz', "r:gz")
     tar.extractall(model_path)
     tar.close()
 
     return base_path
-    
+
 
 def predict_slim(img, checkpoint, rows):
     """
@@ -90,29 +69,27 @@ def predict_slim(img, checkpoint, rows):
     returns: numpy array x, which are the logits, and the inference time
     """
     gd = tf.GraphDef.FromString(open(checkpoint + '_frozen.pb', 'rb').read())
-    inp, predictions = tf.import_graph_def(
-    gd,  return_elements=['input:0', 'MobilenetV2/Predictions/Reshape_1:0'])
+    inp, predictions = tf.import_graph_def(gd, return_elements=['input:0', 'MobilenetV2/Predictions/Reshape_1:0'])
 
     # maybe reshaping image twice img.reshape(1, rows,rows, 3)
     with tf.Session(graph=inp.graph):
         tic = time.time()
-        y_pred = predictions.eval(feed_dict={inp: img.astype(np.float32)})
+        y_pred = predictions.eval(feed_dict={inp: img})
         y_pred = y_pred[0].ravel()
 
-        y_pred = y_pred[1:] / y_pred[1:].sum() # remove background class and renormalize
+        # remove background class and renormalize
+        y_pred = y_pred[1:] / y_pred[1:].sum()
 
         toc = time.time()
     return y_pred, toc-tic
 
-def test_keras_and_tf(models = []):
+
+def test_keras_and_tf(models=[]):
     # This test runs through all the models included below and tests them
     results = []
     for alpha, rows in models:
         print('alpha: ', alpha)
         print('rows: ', rows)
-        # TODO replace WEIGHTS_SAVE_PATH_INCLUDE_TOP with repo link
-        WEIGHTS_SAVE_PATH_INCLUDE_TOP = '/home/jon/Documents/keras_mobilenetV2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_' + \
-            str(alpha) + '_' + str(rows) + '.h5'
 
         # Get tensorflow checkpoint path and download required items
         SLIM_CKPT_base_path = get_tf_mobilenet_v2_items(alpha=alpha, rows=rows)
@@ -130,11 +107,11 @@ def test_keras_and_tf(models = []):
 
         # Preprocess
         img = np.array(PIL.Image.open(img_filename).resize(
-            (rows, rows))).astype(np.float32) / 127.5 - 1.
+            (rows, rows))).astype(np.float32) / 128. - 1.
         img = np.expand_dims(img, axis=0)
 
         # Keras model test
-        output_logits_keras, tk = predict_keras(img, alpha=alpha, rows=rows, weights_path=WEIGHTS_SAVE_PATH_INCLUDE_TOP)
+        output_logits_keras, tk = predict_keras(img, alpha=alpha, rows=rows)
 
         # Tensorflow SLIM
         output_logits_tf, tt = predict_slim(img, SLIM_CKPT_base_path, rows)
@@ -145,7 +122,7 @@ def test_keras_and_tf(models = []):
 
         print('for Model: alpha: ', alpha, "rows: ", rows)
         print("Prediction keras: ", pred_keras, label_map[pred_keras], "score: ", output_logits_keras.max())
-        print("Prediction tf: ", pred_tf,label_map[pred_tf], "score: ", output_logits_tf.max())
+        print("Prediction tf: ", pred_tf, label_map[pred_tf], "score: ", output_logits_tf.max())
         print("output logit keras: ", output_logits_keras.max())
         print("output logit tf: ", output_logits_tf.max())
         print("Inference time keras: ", tk)
@@ -154,7 +131,6 @@ def test_keras_and_tf(models = []):
         print("max_vector_difference", np.abs(output_logits_keras - output_logits_tf).max() )
         assert(pred_tf == pred_keras)
         result = {
-            "model": WEIGHTS_SAVE_PATH_INCLUDE_TOP,
             "alpha": alpha,
             "rows": rows,
             "pred_keras_score": pred_keras,
@@ -176,15 +152,8 @@ if __name__ == "__main__":
     if not os.path.isdir(MODEL_DIR):
         os.makedirs(MODEL_DIR)
 
-    test_results = test_keras_and_tf(models=models_to_load[14:16])
+    test_results = test_keras_and_tf(models=[(1.0, 224)])
 
-    # with open('test_results_c1000.p', 'wb') as pickle_file:
-    #     pickle.dump(test_results, pickle_file)
-
-    # Load remote test 
-    with open('test_results_c1000_remote_is.p', 'wb') as pickle_file:
+    # Uncomment to test results
+    with open('test_results.p', 'wb') as pickle_file:
         pickle.dump(test_results, pickle_file)
-
-
-    print('test_results: ', test_results)
-    

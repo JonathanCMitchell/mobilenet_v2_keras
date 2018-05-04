@@ -621,14 +621,14 @@ def MobileNetV2(input_shape=None,
             model_name = 'mobilenet_v2_weights_tf_dim_ordering_tf_kernels_' + str(alpha) + '_' + str(rows) + '.h5'
             weigh_path = BASE_WEIGHT_PATH + model_name
             weights_path = get_file(model_name,
-                                    weigh_path)
-                                    # cache_subdir='models')
+                                    weigh_path,
+                                    cache_subdir='models')
         else:
             model_name = 'mobilenet_v2_weights_tf_dim_ordering_tf_kernels_' + str(alpha) + '_' + str(rows) + '_no_top' + '.h5'
             weigh_path = BASE_WEIGHT_PATH + model_name
             weights_path = get_file(model_name,
-                                    weigh_path)
-                                    # cache_subdir='models') #uncommented in dist-packages version
+                                    weigh_path,
+                                    cache_subdir='models')
         model.load_weights(weights_path)
     elif weights is not None:
         model.load_weights(weights)
