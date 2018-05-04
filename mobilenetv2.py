@@ -1,62 +1,72 @@
 """MobileNet v2 models for Keras.
 
-MobileNetv2 is a general architecture and can be used for multiple use cases.
+MobileNetV2 is a general architecture and can be used for multiple use cases.
 Depending on the use case, it can use different input layer size and
 different width factors. This allows different width models to reduce
 the number of multiply-adds and thereby
 reduce inference cost on mobile devices.
 
-MobileNetv2 is very similar to the original MobileNet, except that it uses inverted residual
-blocks with bottlenecking features. It has a drastically lower parameter count than the original MobileNet.
-MobileNets support any input size greater than 32 x 32, with larger image sizes
+MobileNetV2 is very similar to the original MobileNet,
+except that it uses inverted residual blocks with
+bottlenecking features. It has a drastically lower
+parameter count than the original MobileNet.
+MobileNets support any input size greater
+than 32 x 32, with larger image sizes
 offering better performance.
+
 The number of parameters and number of multiply-adds
 can be modified by using the `alpha` parameter,
 which increases/decreases the number of filters in each layer.
 By altering the image size and `alpha` parameter,
-all 16 models from the paper can be built, with ImageNet weights provided.
-
-We currently only support models built with the tensorflow backend
+all 22 models from the paper can be built, with ImageNet weights provided.
 
 The paper demonstrates the performance of MobileNets using `alpha` values of
-1.0 (also called 100 % MobileNet), 0.75, 0.5 and 0.25.
-For each of these `alpha` values, weights for 4 different input image sizes
-are provided (224, 192, 160, 128).
+1.0 (also called 100 % MobileNet), 0.35, 0.5, 0.75, 1.0, 1.3, and 1.4
 
-The following table describes the size and accuracy of the 100% MobileNet
-on size 224 x 224:
-----------------------------------------------------------------------------
-Width Multiplier (alpha) | ImageNet Acc |  Multiply-Adds (M) |  Params (M)
-----------------------------------------------------------------------------
-|   1.0 MobileNet-224    |    70.6 %     |        529        |     4.2     |
-|   0.75 MobileNet-224   |    68.4 %     |        325        |     2.6     |
-|   0.50 MobileNet-224   |    63.7 %     |        149        |     1.3     |
-|   0.25 MobileNet-224   |    50.6 %     |        41         |     0.5     |
-----------------------------------------------------------------------------
+For each of these `alpha` values, weights for 5 different input image sizes
+are provided (224, 192, 160, 128, and 96).
+
 
 The following table describes the performance of
-the 100 % MobileNet on various input sizes:
+MobileNet on various input sizes:
 ------------------------------------------------------------------------
-      Resolution      | ImageNet Acc | Multiply-Adds (M) | Params (M)
-------------------------------------------------------------------------
-|  1.0 MobileNet-224  |    70.6 %    |        529        |     4.2     |
-|  1.0 MobileNet-192  |    69.1 %    |        529        |     4.2     |
-|  1.0 MobileNet-160  |    67.2 %    |        529        |     4.2     |
-|  1.0 MobileNet-128  |    64.4 %    |        529        |     4.2     |
-------------------------------------------------------------------------
+MACs stands for Multiply Adds
 
-The weights for all 16 models are obtained and translated
+ Classification Checkpoint| MACs (M)   | Parameters (M)| Top 1 Accuracy| Top 5 Accuracy
+--------------------------|------------|---------------|---------|----|-------------
+| [mobilenet_v2_1.4_224]  | 582 | 6.06 |          75.0 | 92.5 |
+| [mobilenet_v2_1.3_224]  | 509 | 5.34 |          74.4 | 92.1 |
+| [mobilenet_v2_1.0_224]  | 300 | 3.47 |          71.8 | 91.0 |
+| [mobilenet_v2_1.0_192]  | 221 | 3.47 |          70.7 | 90.1 |
+| [mobilenet_v2_1.0_160]  | 154 | 3.47 |          68.8 | 89.0 |
+| [mobilenet_v2_1.0_128]  | 99  | 3.47 |          65.3 | 86.9 |
+| [mobilenet_v2_1.0_96]   | 56  | 3.47 |          60.3 | 83.2 |
+| [mobilenet_v2_0.75_224] | 209 | 2.61 |          69.8 | 89.6 |
+| [mobilenet_v2_0.75_192] | 153 | 2.61 |          68.7 | 88.9 |
+| [mobilenet_v2_0.75_160] | 107 | 2.61 |          66.4 | 87.3 |
+| [mobilenet_v2_0.75_128] | 69  | 2.61 |          63.2 | 85.3 |
+| [mobilenet_v2_0.75_96]  | 39  | 2.61 |          58.8 | 81.6 |
+| [mobilenet_v2_0.5_224]  | 97  | 1.95 |          65.4 | 86.4 |
+| [mobilenet_v2_0.5_192]  | 71  | 1.95 |          63.9 | 85.4 |
+| [mobilenet_v2_0.5_160]  | 50  | 1.95 |          61.0 | 83.2 |
+| [mobilenet_v2_0.5_128]  | 32  | 1.95 |          57.7 | 80.8 |
+| [mobilenet_v2_0.5_96]   | 18  | 1.95 |          51.2 | 75.8 |
+| [mobilenet_v2_0.35_224] | 59  | 1.66 |          60.3 | 82.9 |
+| [mobilenet_v2_0.35_192] | 43  | 1.66 |          58.2 | 81.2 |
+| [mobilenet_v2_0.35_160] | 30  | 1.66 |          55.7 | 79.1 |
+| [mobilenet_v2_0.35_128] | 20  | 1.66 |          50.8 | 75.0 |
+| [mobilenet_v2_0.35_96]  | 11  | 1.66 |          45.5 | 70.4 |
+
+The weights for all 16 models are obtained and translated from the Tensorflow checkpoints
 from TensorFlow checkpoints found at
-https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet_v1.md
+https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet/README.md
 
 # Reference
-
 This file contains building code for MobileNetV2, based on
 [MobileNetV2: Inverted Residuals and Linear Bottlenecks](https://arxiv.org/abs/1801.04381)
 
-The weights for this model were extracted from this repository: 
-
-Tests comparing this model to the existing Tensorflow model can be found at [mobilenet_v2_keras])(https://github.com/JonathanCMitchell/mobilenet_v2_keras)
+Tests comparing this model to the existing Tensorflow model can be
+found at [mobilenet_v2_keras](https://github.com/JonathanCMitchell/mobilenet_v2_keras)
 """
 from __future__ import print_function
 from __future__ import absolute_import
@@ -93,10 +103,6 @@ from keras.applications.imagenet_utils import _obtain_input_shape
 from keras.applications.imagenet_utils import decode_predictions
 from keras import backend as K
 
-# Uncomment to use regular BatchNormalization (for keras version <= 2.1.6)
-# from frozen_batchnorm import FrozenBatchNorm
-# BatchNormalization = FrozenBatchNorm
-
 # Load remote
 BASE_WEIGHT_PATH = 'https://github.com/JonathanCMitchell/mobilenet_v2_keras/releases/download/v1.1/'
 
@@ -104,9 +110,7 @@ BASE_WEIGHT_PATH = 'https://github.com/JonathanCMitchell/mobilenet_v2_keras/rele
 def relu6(x):
     return K.relu(x, max_value=6)
 
-# This is included in case you have an older version of keras which does not contain DepthwiseConv2D
-
-
+# DepthwiseConv2D is included in case you have an older version of keras which does not contain DepthwiseConv2D
 class DepthwiseConv2D(Conv2D):
     """Depthwise separable 2D convolution.
 
@@ -358,15 +362,13 @@ def _make_divisible(v, divisor, min_value=None):
 def MobileNetV2(input_shape=None,
                 alpha=1.0,
                 depth_multiplier=1,
-                dropout=1e-3,
                 include_top=True,
                 weights='imagenet',
                 input_tensor=None,
                 classes=1000):
-    """
-    Instantiates the MobileNetv2 architecture.
+    """Instantiates the MobileNetV2 architecture.
 
-    To load a MobileNet model via `load_model`, import the custom
+    To load a MobileNetV2 model via `load_model`, import the custom
     objects `relu6` and pass them to the `custom_objects` parameter.
     E.g.
     model = load_model('mobilenet.h5', custom_objects={
@@ -374,17 +376,17 @@ def MobileNetV2(input_shape=None,
 
     # Arguments
         input_shape: optional shape tuple, to be specified if you would
-        like to use a model with an input img resolution that is not
-        It should have exactly 3 inputs channels (224, 224, 3).
-        You can also omit this option if you would like
-        to infer input_shape from an input_tensor. If you
-        choose to include both input_tensor and input_shape then
-        input_shape will be used if they match, if the shapes
-        do not match then we will throw an error.
-        E.g. `(160, 160, 3)` would be one valid value.
-
+            like to use a model with an input img resolution that is not
+            (224, 224, 3).
+            It should have exactly 3 inputs channels (224, 224, 3).
+            You can also omit this option if you would like
+            to infer input_shape from an input_tensor.
+            If you choose to include both input_tensor and input_shape then
+            input_shape will be used if they match, if the shapes
+            do not match then we will throw an error.
+            E.g. `(160, 160, 3)` would be one valid value.
         alpha: controls the width of the network. This is known as the
-        width multiplier in the MobileNetv2 paper.
+        width multiplier in the MobileNetV2 paper.
             - If `alpha` < 1.0, proportionally decreases the number
                 of filters in each layer.
             - If `alpha` > 1.0, proportionally increases the number
@@ -393,7 +395,6 @@ def MobileNetV2(input_shape=None,
                  are used at each layer.
         depth_multiplier: depth multiplier for depthwise convolution
             (also called the resolution multiplier)
-        dropout: dropout rate, dropout is currently not in use
         include_top: whether to include the fully-connected
             layer at the top of the network.
         weights: one of `None` (random initialization),
@@ -402,20 +403,17 @@ def MobileNetV2(input_shape=None,
         input_tensor: optional Keras tensor (i.e. output of
             `layers.Input()`)
             to use as image input for the model.
-        
         classes: optional number of classes to classify images
             into, only to be specified if `include_top` is True, and
-            if no `weights` argument is specified. Note that we include
-            the background class of imagenet. 
+            if no `weights` argument is specified.
 
     # Returns
         A Keras model instance.
 
     # Raises
         ValueError: in case of invalid argument for `weights`,
-            or invalid input shape.
-        RuntimeError: If attempting to run this model with a
-            backend that does not support separable convolutions.
+            or invalid input shape or invalid depth_multiplier, alpha,
+            rows when weights='imagenet'
     """
 
     if not (weights in {'imagenet', None} or os.path.exists(weights)):
@@ -428,6 +426,7 @@ def MobileNetV2(input_shape=None,
         raise ValueError('If using `weights` as ImageNet with `include_top` '
                          'as true, `classes` should be 1000')
 
+    # Determine proper input shape and default size.
     # If both input_shape and input_tensor are used, they should match
     if input_shape is not None and input_tensor is not None:
         try:
@@ -454,7 +453,6 @@ def MobileNetV2(input_shape=None,
             raise ValueError('input_tensor specified: ', input_tensor,
                              'is not a keras tensor')
 
-    # Determine proper input shape and default size.
     # If input_shape is None, infer shape from input_tensor
     if input_shape is None and input_tensor is not None:
 
@@ -526,12 +524,14 @@ def MobileNetV2(input_shape=None,
             if rows is None:
                 rows = 224
                 warnings.warn('MobileNet shape is undefined.'
-                              ' Weights for input shape (224, 224) will be loaded.')
+                              ' Weights for input shape'
+                              '(224, 224) will be loaded.')
             else:
                 raise ValueError('If imagenet weights are being loaded, '
-                                 'input must have a static square shape (one of '
-                                 '(96, 96), (128, 128), (160, 160), (192, 192), or (224, 224)).'
-                                 ' Input shape provided = %s' % (input_shape,))
+                                 'input must have a static square shape'
+                                 '(one of (96, 96), (128, 128), (160, 160),'
+                                 '(192, 192), or (224, 224)).'
+                                 'Input shape provided = %s' % (input_shape,))
 
     if K.image_data_format() != 'channels_last':
         warnings.warn('The MobileNet family of models is only available '
@@ -557,42 +557,70 @@ def MobileNetV2(input_shape=None,
             img_input = input_tensor
 
     first_block_filters = _make_divisible(32 * alpha, 8)
-    x = Conv2D(first_block_filters, kernel_size=3, strides=(2, 2), padding='same',
+    x = Conv2D(first_block_filters,
+               kernel_size=3,
+               strides=(2, 2), padding='same',
                use_bias=False, name='Conv1')(img_input)
-    x = BatchNormalization(epsilon=1e-5, name='bn_Conv1')(x)
+    x = BatchNormalization(epsilon=1e-3, momentum=0.999, name='bn_Conv1')(x)
     x = Activation(relu6, name='Conv1_relu')(x)
 
-    x = _first_inverted_res_block(x, filters=16, alpha=alpha, stride=1, expansion=1, block_id=0)
-    x = _inverted_res_block(x, filters=24, alpha=alpha, stride=2, expansion=6, block_id=1)
-    x = _inverted_res_block(x, filters=24, alpha=alpha, stride=1, expansion=6, block_id=2)
+    x = _first_inverted_res_block(x,
+                                  filters=16,
+                                  alpha=alpha,
+                                  stride=1,
+                                  expansion=1,
+                                  block_id=0)
 
-    x = _inverted_res_block(x, filters=32, alpha=alpha, stride=2, expansion=6, block_id=3)
-    x = _inverted_res_block(x, filters=32, alpha=alpha, stride=1, expansion=6, block_id=4)
-    x = _inverted_res_block(x, filters=32, alpha=alpha, stride=1,expansion=6, block_id=5)
+    x = _inverted_res_block(x, filters=24, alpha=alpha, stride=2,
+                            expansion=6, block_id=1)
+    x = _inverted_res_block(x, filters=24, alpha=alpha, stride=1,
+                            expansion=6, block_id=2)
 
-    x = _inverted_res_block(x, filters=64, alpha=alpha, stride=2, expansion=6, block_id=6)
-    x = _inverted_res_block(x, filters=64, alpha=alpha, stride=1, expansion=6, block_id=7)
-    x = _inverted_res_block(x, filters=64, alpha=alpha, stride=1, expansion=6, block_id=8)
-    x = _inverted_res_block(x, filters=64, alpha=alpha, stride=1, expansion=6, block_id=9)
+    x = _inverted_res_block(x, filters=32, alpha=alpha, stride=2,
+                            expansion=6, block_id=3)
+    x = _inverted_res_block(x, filters=32, alpha=alpha, stride=1,
+                            expansion=6, block_id=4)
+    x = _inverted_res_block(x, filters=32, alpha=alpha, stride=1,
+                            expansion=6, block_id=5)
 
-    x = _inverted_res_block(x, filters=96, alpha=alpha, stride=1, expansion=6, block_id=10)
-    x = _inverted_res_block(x, filters=96, alpha=alpha, stride=1, expansion=6, block_id=11)
-    x = _inverted_res_block(x, filters=96, alpha=alpha, stride=1, expansion=6, block_id=12)
+    x = _inverted_res_block(x, filters=64, alpha=alpha, stride=2,
+                            expansion=6, block_id=6)
+    x = _inverted_res_block(x, filters=64, alpha=alpha, stride=1,
+                            expansion=6, block_id=7)
+    x = _inverted_res_block(x, filters=64, alpha=alpha, stride=1,
+                            expansion=6, block_id=8)
+    x = _inverted_res_block(x, filters=64, alpha=alpha, stride=1,
+                            expansion=6, block_id=9)
 
-    x = _inverted_res_block(x, filters=160, alpha=alpha, stride=2, expansion=6, block_id=13)
-    x = _inverted_res_block(x, filters=160, alpha=alpha, stride=1, expansion=6, block_id=14)
-    x = _inverted_res_block(x, filters=160, alpha=alpha, stride=1, expansion=6, block_id=15)
+    x = _inverted_res_block(x, filters=96, alpha=alpha, stride=1,
+                            expansion=6, block_id=10)
+    x = _inverted_res_block(x, filters=96, alpha=alpha, stride=1,
+                            expansion=6, block_id=11)
+    x = _inverted_res_block(x, filters=96, alpha=alpha, stride=1,
+                            expansion=6, block_id=12)
 
-    x = _inverted_res_block(x, filters=320, alpha=alpha, stride=1, expansion=6, block_id=16)
+    x = _inverted_res_block(x, filters=160, alpha=alpha, stride=2,
+                            expansion=6, block_id=13)
+    x = _inverted_res_block(x, filters=160, alpha=alpha, stride=1,
+                            expansion=6, block_id=14)
+    x = _inverted_res_block(x, filters=160, alpha=alpha, stride=1,
+                            expansion=6, block_id=15)
 
-    # no alpha applied to last conv 
-    # as stated in the paper: if the width multiplier is greater than 1 we increase the number of output channels
+    x = _inverted_res_block(x, filters=320, alpha=alpha, stride=1,
+                            expansion=6, block_id=16)
+
+    # no alpha applied to last conv as stated in the paper:
+    # if the width multiplier is greater than 1 we
+    # increase the number of output channels
     if alpha > 1.0:
         last_block_filters = _make_divisible(1280 * alpha, 8)
     else:
         last_block_filters = 1280
 
-    x = Conv2D(last_block_filters, kernel_size=1, use_bias=False, name='Conv_1')(x)
+    x = Conv2D(last_block_filters,
+               kernel_size=1,
+               use_bias=False,
+               name='Conv_1')(x)
     x = BatchNormalization(epsilon=1e-3, momentum=0.999, name='Conv_1_bn')(x)
     x = Activation(relu6, name='out_relu')(x)
 
@@ -618,16 +646,16 @@ def MobileNetV2(input_shape=None,
                              'are not available.')
 
         if include_top:
-            model_name = 'mobilenet_v2_weights_tf_dim_ordering_tf_kernels_' + str(alpha) + '_' + str(rows) + '.h5'
+            model_name = 'mobilenet_v2_weights_tf_dim_ordering_tf_kernels_' + \
+                str(alpha) + '_' + str(rows) + '.h5'
             weigh_path = BASE_WEIGHT_PATH + model_name
-            weights_path = get_file(model_name,
-                                    weigh_path,
+            weights_path = get_file(model_name, weigh_path,
                                     cache_subdir='models')
         else:
-            model_name = 'mobilenet_v2_weights_tf_dim_ordering_tf_kernels_' + str(alpha) + '_' + str(rows) + '_no_top' + '.h5'
+            model_name = 'mobilenet_v2_weights_tf_dim_ordering_tf_kernels_' + \
+                str(alpha) + '_' + str(rows) + '_no_top' + '.h5'
             weigh_path = BASE_WEIGHT_PATH + model_name
-            weights_path = get_file(model_name,
-                                    weigh_path,
+            weights_path = get_file(model_name, weigh_path,
                                     cache_subdir='models')
         model.load_weights(weights_path)
     elif weights is not None:
@@ -643,31 +671,31 @@ def _inverted_res_block(inputs, expansion, stride, alpha, filters, block_id):
     prefix = 'features.' + str(block_id) + '.conv.'
     pointwise_conv_filters = int(filters * alpha)
     pointwise_filters = _make_divisible(pointwise_conv_filters, 8)
-    depthwise_conv_filters = _make_divisible(int(expansion * in_channels), 8)
-    # TODO for expansion
-    if depthwise_conv_filters != int(expansion * in_channels):
-        print('inside inv res block MAKE DIVISIBLE MATTERED')
-
     # Expand
 
-    x = Conv2D(depthwise_conv_filters, kernel_size=1, padding='same', use_bias=False, activation=None,
-               name='mobl%d_conv_%d_expand' % (block_id, block_id))(inputs)
-    x = BatchNormalization(epsilon=1e-3, momentum=0.999, name='bn%d_conv_%d_bn_expand' %
-                           (block_id, block_id))(x)
+    x = Conv2D(expansion * in_channels, kernel_size=1, padding='same',
+               use_bias=False, activation=None,
+               name='mobl%d_conv_expand' % block_id)(inputs)
+    x = BatchNormalization(epsilon=1e-3, momentum=0.999,
+                           name='bn%d_conv_bn_expand' %
+                           block_id)(x)
     x = Activation(relu6, name='conv_%d_relu' % block_id)(x)
 
     # Depthwise
-    x = DepthwiseConv2D(kernel_size=3, strides=stride, activation=None, use_bias=False, padding='same',
-                        name='mobl%d_conv_%d_depthwise' % (block_id, block_id))(x)
-    x = BatchNormalization(epsilon=1e-3, momentum=0.999, name='bn%d_conv_%d_bn_depthwise' %
-                           (block_id, block_id))(x)
+    x = DepthwiseConv2D(kernel_size=3, strides=stride, activation=None,
+                        use_bias=False, padding='same',
+                        name='mobl%d_conv_depthwise' % block_id)(x)
+    x = BatchNormalization(epsilon=1e-3, momentum=0.999,
+                           name='bn%d_conv_depthwise' % block_id)(x)
+
     x = Activation(relu6, name='conv_dw_%d_relu' % block_id)(x)
 
     # Project
-    x = Conv2D(pointwise_filters, kernel_size=1, padding='same', use_bias=False,
-               activation=None, name='mobl%d_conv_%d_project' % (block_id, block_id))(x)
-    x = BatchNormalization(epsilon=1e-3, momentum=0.999, name='bn%d_conv_%d_bn_project' %
-                           (block_id, block_id))(x)
+    x = Conv2D(pointwise_filters,
+               kernel_size=1, padding='same', use_bias=False, activation=None,
+               name='mobl%d_conv_project' % block_id)(x)
+    x = BatchNormalization(epsilon=1e-3, momentum=0.999,
+                           name='bn%d_conv_bn_project' % block_id)(x)
 
     if in_channels == pointwise_filters and stride == 1:
         return Add(name='res_connect_' + str(block_id))([inputs, x])
@@ -675,25 +703,36 @@ def _inverted_res_block(inputs, expansion, stride, alpha, filters, block_id):
     return x
 
 
-def _first_inverted_res_block(inputs, expansion, stride, alpha, filters, block_id):
+def _first_inverted_res_block(inputs,
+                              expansion, stride,
+                              alpha, filters, block_id):
     in_channels = inputs._keras_shape[-1]
     prefix = 'features.' + str(block_id) + '.conv.'
     pointwise_conv_filters = int(filters * alpha)
     pointwise_filters = _make_divisible(pointwise_conv_filters, 8)
 
-
     # Depthwise
-    x = DepthwiseConv2D(kernel_size=3, strides=stride, activation=None, use_bias=False, padding='same',
-                        name='mobl%d_conv_%d_depthwise' % (block_id, block_id))(inputs)
-    x = BatchNormalization(epsilon=1e-3, momentum=0.999, name='bn%d_conv_%d_bn_depthwise' %
-                           (block_id, block_id))(x)
+    x = DepthwiseConv2D(kernel_size=3,
+                        strides=stride, activation=None,
+                        use_bias=False, padding='same',
+                        name='mobl%d_conv_depthwise' %
+                        block_id)(inputs)
+    x = BatchNormalization(epsilon=1e-3, momentum=0.999,
+                           name='bn%d_conv_depthwise' %
+                           block_id)(x)
     x = Activation(relu6, name='conv_dw_%d_relu' % block_id)(x)
 
     # Project
-    x = Conv2D(pointwise_filters, kernel_size=1, padding='same', use_bias=False,
-               activation=None, name='mobl%d_conv_%d_project' % (block_id, block_id))(x)
-    x = BatchNormalization(epsilon=1e-3, momentum=0.999, name='bn%d_conv_%d_bn_project' %
-                           (block_id, block_id))(x)
+    x = Conv2D(pointwise_filters,
+               kernel_size=1,
+               padding='same',
+               use_bias=False,
+               activation=None,
+               name='mobl%d_conv_project' %
+               block_id)(x)
+    x = BatchNormalization(epsilon=1e-3, momentum=0.999,
+                           name='bn%d_conv_project' %
+                           block_id)(x)
 
     if in_channels == pointwise_filters and stride == 1:
         return Add(name='res_connect_' + str(block_id))([inputs, x])
