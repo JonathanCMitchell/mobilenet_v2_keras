@@ -94,7 +94,7 @@ from keras.applications.imagenet_utils import decode_predictions
 from keras import backend as K
 
 # Load remote
-BASE_WEIGHT_PATH = 'https://github.com/JonathanCMitchell/mobilenet_v2_keras/releases/download/v1.0/'
+BASE_WEIGHT_PATH = 'https://github.com/JonathanCMitchell/mobilenet_v2_keras/releases/download/v1.1/'
 
 
 def relu6(x):
@@ -338,7 +338,21 @@ def preprocess_input(x):
     x -= 1.
     return x.astype(np.float32)
 
-# Add BatchNorm custom
+
+def unprocess_input(x):
+    """Unprocesses a numpy array encoding a batch of images.
+    This function undoes the preprocessing which converts
+    the RGB values from [0, 255] to [-1, 1].
+
+    # Arguments
+        x: a 4D numpy array consists of RGB values within [0, 255].
+
+    # Returns
+        Preprocessed array.
+    """
+    x += 1.
+    x *= 128.
+    return x.astype(np.uint8)
 
 # This function is taken from the original tf repo. It ensures that all layers have a channel number that is divisible by 8
 # It can be seen here  https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet/mobilenet.py
@@ -561,7 +575,7 @@ def MobileNetV2(input_shape=None,
     x = BatchNormalization(epsilon=1e-5, name='bn_Conv1')(x)
     x = Activation(relu6, name='Conv1_relu')(x)
 
-    x = _first_inverted_res_block(x, filters=16, alpha = alpha, stride=1, expansion=1, block_id=0)
+    x = _first_inverted_res_block(x, filters=16, alpha=alpha, stride=1, expansion=1, block_id=0)
     x = _inverted_res_block(x, filters=24, alpha=alpha, stride=2, expansion=6, block_id=1)
     x = _inverted_res_block(x, filters=24, alpha=alpha, stride=1, expansion=6, block_id=2)
 
@@ -592,14 +606,11 @@ def MobileNetV2(input_shape=None,
         last_block_filters = 1280
 
     x = Conv2D(last_block_filters, kernel_size=1, use_bias=False, name='Conv_1')(x)
-    x = BatchNormalization(epsilon=1e-5, name='Conv_1_bn')(x)
+    x = BatchNormalization(epsilon=1e-3, momentum=0.999, name='Conv_1_bn')(x)
     x = Activation(relu6, name='out_relu')(x)
 
     if include_top:
-        # set the pool_size equal to the shape of the convolution before we enter pooling
-        pool_size = tuple(x.get_shape().as_list()[1:3])
-        x = AveragePooling2D(pool_size=pool_size)(x)
-        x = Flatten()(x)
+        x = GlobalAveragePooling2D()(x)
         x = Dense(classes, activation='softmax',
                   use_bias=True, name='Logits')(x)
 
@@ -645,25 +656,30 @@ def _inverted_res_block(inputs, expansion, stride, alpha, filters, block_id):
     prefix = 'features.' + str(block_id) + '.conv.'
     pointwise_conv_filters = int(filters * alpha)
     pointwise_filters = _make_divisible(pointwise_conv_filters, 8)
+    depthwise_conv_filters = _make_divisible(int(expansion * in_channels), 8)
+    # TODO for expansion
+    if depthwise_conv_filters != int(expansion * in_channels):
+        print('inside inv res block MAKE DIVISIBLE MATTERED')
+
     # Expand
 
-    x = Conv2D(expansion * in_channels, kernel_size=1, padding='same', use_bias=False, activation=None,
+    x = Conv2D(depthwise_conv_filters, kernel_size=1, padding='same', use_bias=False, activation=None,
                name='mobl%d_conv_%d_expand' % (block_id, block_id))(inputs)
-    x = BatchNormalization(epsilon=1e-5, name='bn%d_conv_%d_bn_expand' %
+    x = BatchNormalization(epsilon=1e-3, momentum=0.999, name='bn%d_conv_%d_bn_expand' %
                            (block_id, block_id))(x)
     x = Activation(relu6, name='conv_%d_relu' % block_id)(x)
 
     # Depthwise
     x = DepthwiseConv2D(kernel_size=3, strides=stride, activation=None, use_bias=False, padding='same',
                         name='mobl%d_conv_%d_depthwise' % (block_id, block_id))(x)
-    x = BatchNormalization(epsilon=1e-5, name='bn%d_conv_%d_bn_depthwise' %
+    x = BatchNormalization(epsilon=1e-3, momentum=0.999, name='bn%d_conv_%d_bn_depthwise' %
                            (block_id, block_id))(x)
     x = Activation(relu6, name='conv_dw_%d_relu' % block_id)(x)
 
     # Project
     x = Conv2D(pointwise_filters, kernel_size=1, padding='same', use_bias=False,
                activation=None, name='mobl%d_conv_%d_project' % (block_id, block_id))(x)
-    x = BatchNormalization(epsilon=1e-5, name='bn%d_conv_%d_bn_project' %
+    x = BatchNormalization(epsilon=1e-3, momentum=0.999, name='bn%d_conv_%d_bn_project' %
                            (block_id, block_id))(x)
 
     if in_channels == pointwise_filters and stride == 1:
@@ -682,14 +698,14 @@ def _first_inverted_res_block(inputs, expansion, stride, alpha, filters, block_i
     # Depthwise
     x = DepthwiseConv2D(kernel_size=3, strides=stride, activation=None, use_bias=False, padding='same',
                         name='mobl%d_conv_%d_depthwise' % (block_id, block_id))(inputs)
-    x = BatchNormalization(epsilon=1e-5, name='bn%d_conv_%d_bn_depthwise' %
+    x = BatchNormalization(epsilon=1e-3, momentum=0.999, name='bn%d_conv_%d_bn_depthwise' %
                            (block_id, block_id))(x)
     x = Activation(relu6, name='conv_dw_%d_relu' % block_id)(x)
 
     # Project
     x = Conv2D(pointwise_filters, kernel_size=1, padding='same', use_bias=False,
                activation=None, name='mobl%d_conv_%d_project' % (block_id, block_id))(x)
-    x = BatchNormalization(epsilon=1e-5, name='bn%d_conv_%d_bn_project' %
+    x = BatchNormalization(epsilon=1e-3, momentum=0.999, name='bn%d_conv_%d_bn_project' %
                            (block_id, block_id))(x)
 
     if in_channels == pointwise_filters and stride == 1:
