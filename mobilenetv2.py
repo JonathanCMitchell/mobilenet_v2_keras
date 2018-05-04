@@ -93,8 +93,9 @@ from keras.applications.imagenet_utils import _obtain_input_shape
 from keras.applications.imagenet_utils import decode_predictions
 from keras import backend as K
 
-from frozen_batchnorm import FrozenBatchNorm
-BatchNorm = FrozenBatchNorm
+# Uncomment to use regular BatchNormalization (for keras version <= 2.1.6)
+# from frozen_batchnorm import FrozenBatchNorm
+# BatchNormalization = FrozenBatchNorm
 
 # Load remote
 BASE_WEIGHT_PATH = 'https://github.com/JonathanCMitchell/mobilenet_v2_keras/releases/download/v1.1/'
@@ -102,6 +103,9 @@ BASE_WEIGHT_PATH = 'https://github.com/JonathanCMitchell/mobilenet_v2_keras/rele
 
 def relu6(x):
     return K.relu(x, max_value=6)
+
+# This is included in case you have an older version of keras which does not contain DepthwiseConv2D
+
 
 class DepthwiseConv2D(Conv2D):
     """Depthwise separable 2D convolution.
@@ -304,11 +308,6 @@ class DepthwiseConv2D(Conv2D):
         return config
 
 
-BatchNormalization = BatchNorm
-
-# ==== Delete ==========
-
-
 def preprocess_input(x):
     """Preprocesses a numpy array encoding a batch of images.
 
@@ -444,7 +443,7 @@ def MobileNetV2(input_shape=None,
             if K.image_data_format == 'channels_first':
                 if input_tensor._keras_shape[1] != input_shape[1]:
                     raise ValueError('input_shape: ', input_shape,
-                                     'and input_tensor: ', input_tensor, 
+                                     'and input_tensor: ', input_tensor,
                                      'do not meet the same shape requirements')
             else:
                 if input_tensor._keras_shape[2] != input_shape[1]:
@@ -462,8 +461,8 @@ def MobileNetV2(input_shape=None,
         try:
             K.is_keras_tensor(input_tensor)
         except ValueError:
-            raise ValueError('input_tensor: ', input_tensor, 
-                             'is type: ', type(input_tensor), 
+            raise ValueError('input_tensor: ', input_tensor,
+                             'is type: ', type(input_tensor),
                              'which is not a valid type')
 
         if input_shape is None and not K.is_keras_tensor(input_tensor):
